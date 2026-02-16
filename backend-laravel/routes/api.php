@@ -109,7 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Location Tracking Routes
-    
+
     // Employee routes - record locations
     Route::prefix('locations')->group(function () {
         Route::post('/', [LocationController::class, 'store']); // Record single location

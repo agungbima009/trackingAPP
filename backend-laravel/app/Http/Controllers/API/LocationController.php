@@ -84,7 +84,7 @@ class LocationController extends Controller
         foreach ($request->locations as $index => $locationData) {
             try {
                 $takenTask = TakenTaskModel::find($locationData['taken_task_id']);
-                
+
                 if (!$takenTask || !$takenTask->hasUser($userId)) {
                     $errors[] = "Location $index: Not assigned to task";
                     continue;
@@ -124,7 +124,7 @@ class LocationController extends Controller
     public function getTaskLocations(Request $request, $takenTaskId)
     {
         $takenTask = TakenTaskModel::findOrFail($takenTaskId);
-        
+
         // Check permission - user must be assigned to task or be admin/superadmin
         $authUser = $request->user();
         if (!$takenTask->hasUser($authUser->id) && !$authUser->hasAnyRole(['admin', 'superadmin'])) {
@@ -197,7 +197,7 @@ class LocationController extends Controller
     public function getCurrentLocations(Request $request, $takenTaskId)
     {
         $takenTask = TakenTaskModel::findOrFail($takenTaskId);
-        
+
         // Check permission
         $authUser = $request->user();
         if (!$authUser->hasAnyRole(['admin', 'superadmin'])) {
@@ -307,7 +307,7 @@ class LocationController extends Controller
         ]);
 
         $takenTask = TakenTaskModel::findOrFail($takenTaskId);
-        
+
         // Check permission
         $authUser = $request->user();
         if (!$authUser->hasAnyRole(['admin', 'superadmin']) && $authUser->id !== $request->user_id) {

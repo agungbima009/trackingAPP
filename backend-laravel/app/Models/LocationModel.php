@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class LocationModel extends Model
 {
     use HasFactory, HasUuids;
-    
+
     protected $table = 'locations';
     protected $primaryKey = 'location_id';
 
