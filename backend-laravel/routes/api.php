@@ -3,6 +3,9 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\RolePermissionController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\TaskController;
+use App\Http\Controllers\API\TakenTaskController;
+use App\Http\Controllers\API\LocationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +69,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::put('/users/{id}/status', [UserController::class, 'updateStatus']);
         Route::get('/departments', [UserController::class, 'departments']);
+
+        // Task Management
+        Route::get('/tasks', [TaskController::class, 'index']);
+        Route::post('/tasks', [TaskController::class, 'store']);
+        Route::get('/tasks/statistics', [TaskController::class, 'statistics']);
+        Route::get('/tasks/by-location', [TaskController::class, 'byLocation']);
+        Route::get('/tasks/{id}', [TaskController::class, 'show']);
+        Route::put('/tasks/{id}', [TaskController::class, 'update']);
+        Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+        Route::post('/tasks/{id}/assign', [TaskController::class, 'assignToUsers']);
+
+        // Task Assignment Management
+        Route::get('/assignments', [TakenTaskController::class, 'index']);
+        Route::post('/assignments', [TakenTaskController::class, 'store']);
+        Route::get('/assignments/{id}', [TakenTaskController::class, 'show']);
+        Route::put('/assignments/{id}', [TakenTaskController::class, 'update']);
+        Route::delete('/assignments/{id}', [TakenTaskController::class, 'destroy']);
+        Route::put('/assignments/{id}/cancel', [TakenTaskController::class, 'cancelTask']);
+        Route::get('/users/{userId}/statistics', [TakenTaskController::class, 'userStatistics']);
     });
 
     // Superadmin only routes
@@ -77,6 +99,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::put('/{id}', [UserController::class, 'update']);
         Route::post('/{id}/avatar', [UserController::class, 'uploadAvatar']);
+    });
+
+    // Employee Task Routes (view and manage own tasks)
+    Route::prefix('my-tasks')->group(function () {
+        Route::get('/', [TakenTaskController::class, 'myTasks']);
+        Route::put('/{id}/start', [TakenTaskController::class, 'startTask']);
+        Route::put('/{id}/complete', [TakenTaskController::class, 'completeTask']);
+    });
+
+    // Location Tracking Routes
+    
+    // Employee routes - record locations
+    Route::prefix('locations')->group(function () {
+        Route::post('/', [LocationController::class, 'store']); // Record single location
+        Route::post('/batch', [LocationController::class, 'storeBatch']); // Record multiple locations
+        Route::get('/my', [LocationController::class, 'myLocations']); // Get own location history
+        Route::get('/my/statistics', [LocationController::class, 'userStatistics']); // Get own statistics
+        Route::get('/tasks/{takenTaskId}', [LocationController::class, 'getTaskLocations']); // Get locations for assigned task
+        Route::get('/tasks/{takenTaskId}/route', [LocationController::class, 'getRoute']); // Get route/path for a task
+    });
+
+    // Admin location management routes
+    Route::middleware('role:superadmin|admin')->prefix('admin/locations')->group(function () {
+        Route::get('/tasks/{takenTaskId}', [LocationController::class, 'getTaskLocations']); // View task locations
+        Route::get('/tasks/{takenTaskId}/current', [LocationController::class, 'getCurrentLocations']); // Current locations
+        Route::get('/tasks/{takenTaskId}/statistics', [LocationController::class, 'taskStatistics']); // Task statistics
+        Route::get('/tasks/{takenTaskId}/route', [LocationController::class, 'getRoute']); // Get route/path
+        Route::get('/users/{userId}/statistics', [LocationController::class, 'userStatistics']); // User statistics
+        Route::get('/nearby', [LocationController::class, 'getNearby']); // Find locations near coordinates
+        Route::delete('/{locationId}', [LocationController::class, 'destroy']); // Delete location record
     });
 
     // Add your other protected routes here

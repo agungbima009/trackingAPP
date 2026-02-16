@@ -38,6 +38,15 @@ class RolePermissionSeeder extends Seeder
             'edit permissions',
             'delete permissions',
 
+            // Task management
+            'view tasks',
+            'create tasks',
+            'edit tasks',
+            'delete tasks',
+            'assign tasks',
+            'view own tasks',
+            'manage own tasks',
+
             // Location tracking
             'view locations',
             'create locations',
@@ -76,8 +85,12 @@ class RolePermissionSeeder extends Seeder
             'view users',
             'create users',
             'edit users',
+            'view tasks',
+            'create tasks',
+            'edit tasks',
+            'delete tasks',
+            'assign tasks',
             'view locations',
-            'create locations',
             'view reports',
             'export reports',
             'view dashboard',
@@ -88,8 +101,12 @@ class RolePermissionSeeder extends Seeder
         // Employee role - basic tracking permissions
         $employee = Role::firstOrCreate(['name' => 'employee']);
         $employee->syncPermissions([
+            'view own tasks',
+            'manage own tasks',
             'view own locations',
             'create own locations',
+            'view reports',
+            'create reports',
             'view dashboard',
         ]);
 

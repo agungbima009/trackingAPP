@@ -51,4 +51,23 @@ class User extends Authenticatable
         'password' => 'hashed',
         'last_login_at' => 'datetime',
     ];
+
+    /**
+     * Get all location records for this user
+     */
+    public function locations()
+    {
+        return $this->hasMany(LocationModel::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get recent locations
+     */
+    public function recentLocations($minutes = 60)
+    {
+        return $this->locations()
+            ->where('recorded_at', '>=', now()->subMinutes($minutes))
+            ->orderBy('recorded_at', 'desc')
+            ->get();
+    }
 }
