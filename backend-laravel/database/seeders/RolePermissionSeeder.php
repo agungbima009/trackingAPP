@@ -25,22 +25,39 @@ class RolePermissionSeeder extends Seeder
             'create users',
             'edit users',
             'delete users',
-            
+
             // Role management
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
-            
+
             // Permission management
             'view permissions',
             'create permissions',
             'edit permissions',
             'delete permissions',
-            
-            // Add more permissions as needed for your app
+
+            // Location tracking
+            'view locations',
+            'create locations',
+            'edit locations',
+            'delete locations',
+            'view own locations',
+            'create own locations',
+
+            // Reports
+            'view reports',
+            'create reports',
+            'export reports',
+
+            // Dashboard
             'view dashboard',
+            'view analytics',
+
+            // Settings
             'manage settings',
+            'view settings',
         ];
 
         foreach ($permissions as $permission) {
@@ -48,32 +65,41 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Create roles and assign permissions
-        
-        // Admin role - has all permissions
+
+        // SuperAdmin role - has all permissions
+        $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
+        $superadmin->syncPermissions(Permission::all());
+
+        // Admin role - can manage users and view all data
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->givePermissionTo(Permission::all());
-
-        // Moderator role - has some permissions
-        $moderator = Role::firstOrCreate(['name' => 'moderator']);
-        $moderator->syncPermissions([
+        $admin->syncPermissions([
             'view users',
+            'create users',
             'edit users',
-            'view roles',
-            'view permissions',
+            'view locations',
+            'create locations',
+            'view reports',
+            'export reports',
             'view dashboard',
+            'view analytics',
+            'view settings',
         ]);
 
-        // User role - basic permissions
-        $user = Role::firstOrCreate(['name' => 'user']);
-        $user->syncPermissions([
+        // Employee role - basic tracking permissions
+        $employee = Role::firstOrCreate(['name' => 'employee']);
+        $employee->syncPermissions([
+            'view own locations',
+            'create own locations',
             'view dashboard',
         ]);
-
-        // NOTE: To create test users, use the registration API endpoint
-        // or create users manually via tinker after seeding
 
         $this->command->info('Roles and permissions seeded successfully!');
-        $this->command->info('You can now create users via the /api/auth/register endpoint');
-        $this->command->info('Or create an admin user manually and assign roles');
+        $this->command->info('');
+        $this->command->info('Created roles:');
+        $this->command->info('  - superadmin: Full system access');
+        $this->command->info('  - admin: User & location management');
+        $this->command->info('  - employee: Can track own location');
+        $this->command->info('');
+        $this->command->info('Use /api/auth/register to create users and assign roles via admin panel');
     }
 }

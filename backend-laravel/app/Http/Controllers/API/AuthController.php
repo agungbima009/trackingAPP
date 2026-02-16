@@ -19,16 +19,27 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'phone_number' => 'nullable|string|max:20',
+            'employee_id' => 'nullable|string|max:50|unique:users',
+            'department' => 'nullable|string|max:100',
+            'position' => 'nullable|string|max:100',
+            'address' => 'nullable|string',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone_number' => $request->phone_number,
+            'employee_id' => $request->employee_id,
+            'department' => $request->department,
+            'position' => $request->position,
+            'address' => $request->address,
+            'status' => 'active',
         ]);
 
-        // Assign default role (optional)
-        $user->assignRole('user');
+        // Assign default role (employee)
+        $user->assignRole('employee');
 
         // Create token for the user
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -58,6 +69,16 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+
+        // Check if user is active
+        if ($user->status !== 'active') {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been deactivated. Please contact administrator.'],
+            ]);
+        }
+
+        // Update last login timestamp
+        $user->update(['last_login_at' => now()]);
 
         // Create token for the user
         $token = $user->createToken('auth_token')->plainTextToken;
