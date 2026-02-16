@@ -1,0 +1,90 @@
+.metric-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.metric-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-change {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.metric-change.up {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.metric-change.down {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.metric-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.metric-icon {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 64px;
+  opacity: 0.05;
+}
+
+.metric-icon.positive {
+  color: rgba(255, 255, 255, 0.05);
+}
+
+.metric-icon.negative {
+  color: rgba(255, 255, 255, 0.05);
+}
+
+/* Animation on hover */
+.metric-card:hover .metric-icon {
+  opacity: 0.08;
+  transform: scale(1.1);
+  transition: all 0.3s;
+}

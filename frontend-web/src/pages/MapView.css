@@ -1,0 +1,304 @@
+.map-view {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: white;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 50%, #f5f5f7 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-grid {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.grid-line {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.grid-line.horizontal {
+  width: 100%;
+  height: 1px;
+  left: 0;
+}
+
+.grid-line.vertical {
+  width: 1px;
+  height: 100%;
+  top: 0;
+}
+
+.map-info {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #86868b;
+  pointer-events: none;
+}
+
+.map-info p {
+  font-size: 24px;
+  font-weight: 600;
+  color: #d2d2d7;
+  margin: 0 0 8px 0;
+}
+
+.map-info span {
+  font-size: 14px;
+  color: #86868b;
+}
+
+.map-info-small {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1d1d1f;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5ea;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Location Pins */
+.location-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  cursor: pointer;
+  transition: z-index 0s 0.2s;
+}
+
+.location-pin:hover {
+  z-index: 100;
+  transition: z-index 0s;
+}
+
+.pin-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 8px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border: 3px solid white;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  transition: all 0.2s;
+}
+
+/* Status colors for pins */
+.pin-marker.active .pin-dot {
+  background: #000000;
+}
+
+.pin-marker.inactive .pin-dot {
+  background: #86868b;
+}
+
+.pin-marker.offline .pin-dot {
+  background: #d2d2d7;
+}
+
+.location-pin:hover .pin-dot {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.pin-pulse {
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+.pin-label {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1d1f;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e5ea;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition: all 0.2s;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.pin-label.visible,
+.location-pin:hover .pin-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.member-team {
+  font-size: 10px;
+  font-weight: 500;
+  color: #86868b;
+  text-transform: capitalize;
+}
+
+/* Map Controls */
+.map-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.control-button {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-button:hover {
+  background: #000000;
+  color: white;
+  border-color: #000000;
+  transform: scale(1.05);
+}
+
+.control-button:active {
+  transform: scale(0.95);
+}
+
+/* Map Legend */
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5ea;
+  z-index: 100;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #1d1d1f;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend-marker.active {
+  background: #000000;
+}
+
+.legend-marker.inactive {
+  background: #86868b;
+}
+
+.legend-marker.offline {
+  background: #d2d2d7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .map-controls {
+    top: 10px;
+    right: 10px;
+  }
+
+  .control-button {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .map-legend {
+    bottom: 10px;
+    left: 10px;
+    padding: 12px;
+  }
+
+  .pin-label {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
