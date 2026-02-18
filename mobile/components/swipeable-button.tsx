@@ -1,143 +1,132 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useDerivedValue,
+  withSpring,
+  interpolate,
+  runOnJS,
+  ReduceMotion,
+} from 'react-native-reanimated';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  PanResponder,
-  Dimensions,
-} from 'react-native';
-import { IconSymbol } from './ui/icon-symbol';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BUTTON_WIDTH = SCREEN_WIDTH - 80;
-const SWIPE_THRESHOLD = BUTTON_WIDTH - 100;
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 
 interface SwipeableButtonProps {
   onSwipeComplete: () => void;
   disabled?: boolean;
 }
 
-export function SwipeableButton({ onSwipeComplete, disabled = false }: SwipeableButtonProps) {
-  const [swiped, setSwiped] = useState(false);
-  const translateX = useRef(new Animated.Value(0)).current;
-  const backgroundOpacity = useRef(new Animated.Value(0)).current;
+export function SwipeableButton({
+  onSwipeComplete,
+  disabled = false,
+}: SwipeableButtonProps) {
+  const SLIDER_SIZE = 60;
+  const MARGIN = 5;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled && !swiped,
-      onMoveShouldSetPanResponder: () => !disabled && !swiped,
-      onPanResponderMove: (_, gesture) => {
-        if (gesture.dx > 0 && gesture.dx <= SWIPE_THRESHOLD) {
-          translateX.setValue(gesture.dx);
-          backgroundOpacity.setValue(gesture.dx / SWIPE_THRESHOLD);
-        }
-      },
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx >= SWIPE_THRESHOLD) {
-          // Swipe completed
-          setSwiped(true);
-          Animated.parallel([
-            Animated.spring(translateX, {
-              toValue: SWIPE_THRESHOLD,
-              useNativeDriver: true,
-            }),
-            Animated.timing(backgroundOpacity, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]).start(() => {
-            setTimeout(() => {
-              onSwipeComplete();
-            }, 300);
-          });
-        } else {
-          // Swipe not completed, return to start
-          Animated.parallel([
-            Animated.spring(translateX, {
-              toValue: 0,
-              useNativeDriver: true,
-              damping: 15,
-            }),
-            Animated.timing(backgroundOpacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-      },
+  const translateX = useSharedValue(0);
+  const trackWidth = useSharedValue(0);
+  const completed = useSharedValue(false);
+
+  // ✅ FIX: gunakan derived value
+  const maxTranslate = useDerivedValue(() => {
+    return trackWidth.value - SLIDER_SIZE - MARGIN * 2;
+  });
+
+  const gesture = Gesture.Pan()
+    .enabled(!disabled)
+    .onUpdate((event) => {
+      if (completed.value) return;
+
+      const newX = Math.max(
+        0,
+        Math.min(event.translationX, maxTranslate.value)
+      );
+
+      translateX.value = newX;
     })
-  ).current;
+    .onEnd(() => {
+      if (completed.value) return;
+
+      const threshold = maxTranslate.value * 0.85;
+
+      if (translateX.value >= threshold) {
+        translateX.value = withSpring(maxTranslate.value, {
+          reduceMotion: ReduceMotion.Never,
+        });
+
+        completed.value = true;
+        runOnJS(onSwipeComplete)();
+      } else {
+        translateX.value = withSpring(0, {
+          reduceMotion: ReduceMotion.Never,
+        });
+      }
+    });
+
+  const sliderStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const fillStyle = useAnimatedStyle(() => {
+    const progress =
+      maxTranslate.value > 0
+        ? translateX.value / maxTranslate.value
+        : 0;
+
+    return {
+      opacity: progress,
+      transform: [{ scaleX: progress }],
+    };
+  });
+
+  const textStyle = useAnimatedStyle(() => {
+    const progress =
+      maxTranslate.value > 0
+        ? translateX.value / maxTranslate.value
+        : 0;
+
+    return {
+      opacity: interpolate(progress, [0, 1], [1, 0]),
+    };
+  });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.trackContainer}>
-        {/* Background that fills on swipe */}
-        <Animated.View
-          style={[
-            styles.backgroundFill,
-            {
-              opacity: backgroundOpacity,
-              transform: [
-                {
-                  scaleX: backgroundOpacity.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
+    <View
+      style={styles.container}
+      onLayout={(e) => {
+        trackWidth.value =
+          e.nativeEvent.layout.width;
+      }}
+    >
+      <Animated.View style={[styles.fill, fillStyle]} />
 
-        {/* Text instruction */}
-        <View style={styles.textContainer}>
-          <IconSymbol name="arrow.right" size={20} color="#9CA3AF" />
-          <Text style={styles.instructionText}>
-            {swiped ? 'Starting...' : 'Swipe to Start Tracking'}
-          </Text>
-          <IconSymbol name="arrow.right" size={20} color="#9CA3AF" />
-        </View>
+      <Animated.View style={[styles.textContainer, textStyle]}>
+        <Text style={styles.text}>
+          Swipe to Start Tracking
+        </Text>
+      </Animated.View>
 
-        {/* Sliding button */}
-        <Animated.View
-          style={[
-            styles.sliderButton,
-            {
-              transform: [{ translateX }],
-            },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.sliderButtonInner}>
-            <IconSymbol name="arrow.right" size={28} color="#FFFFFF" />
-          </View>
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[styles.slider, sliderStyle]}>
+          <Text style={styles.arrow}>➜</Text>
         </Animated.View>
-      </View>
+      </GestureDetector>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-  },
-  trackContainer: {
     height: 70,
     backgroundColor: '#1F2937',
     borderRadius: 40,
-    position: 'relative',
-    overflow: 'hidden',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    overflow: 'hidden',
   },
-  backgroundFill: {
+  fill: {
     position: 'absolute',
     left: 0,
     top: 0,
@@ -147,36 +136,29 @@ const styles = StyleSheet.create({
     transformOrigin: 'left',
   },
   textContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    position: 'absolute',
+    width: '100%',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 80,
   },
-  instructionText: {
+  text: {
     fontSize: 16,
     fontWeight: '600',
     color: '#9CA3AF',
-    textAlign: 'center',
   },
-  sliderButton: {
+  slider: {
     position: 'absolute',
     left: 5,
     top: 5,
     width: 60,
     height: 60,
-  },
-  sliderButtonInner: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#3B82F6',
     borderRadius: 30,
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+  },
+  arrow: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });

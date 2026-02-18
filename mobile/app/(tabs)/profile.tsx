@@ -1,11 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Clear AsyncStorage
+              await AsyncStorage.removeItem('userToken');
+              await AsyncStorage.removeItem('userEmail');
+              
+              // Navigate to login
+              router.replace('/login');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const menuItems = [
     {
@@ -128,7 +161,7 @@ export default function ProfileScreen() {
         ))}
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <IconSymbol size={20} name="arrow.right.square.fill" color="#EF4444" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>

@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SwipeableButton } from '@/components/swipeable-button';
+import SuccessCheckOverlay from '@/components/SuccessCheckOverlay';
+
 
 interface LocationPoint {
   id: string;
@@ -17,6 +19,7 @@ export default function TaskDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [isTracking, setIsTracking] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [locationHistory, setLocationHistory] = useState<LocationPoint[]>([]);
 
   // Sample task data (in real app, fetch based on params.taskId)
@@ -55,8 +58,14 @@ export default function TaskDetailScreen() {
   };
 
   const handleStartTracking = () => {
+    // Show success animation
+    setShowSuccess(true);
+  };
+
+  const handleSuccessFinish = () => {
+    setShowSuccess(false);
     setIsTracking(true);
-    Alert.alert('Tracking Dimulai', 'Lokasi Anda akan dilacak secara real-time');
+    // Tracking started - no alert needed, animation provides feedback
     // In real app: Start GPS tracking service
   };
 
@@ -85,6 +94,12 @@ export default function TaskDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Success Check Overlay */}
+      <SuccessCheckOverlay 
+        visible={showSuccess} 
+        onFinish={handleSuccessFinish}
+      />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
