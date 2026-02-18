@@ -38,16 +38,32 @@ function Login() {
       // Call real API
       const response = await login(formData.email, formData.password);
       
+      console.log('Login successful:', response);
+      
+      // Verify token is saved
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      console.log('Token saved:', savedToken);
+      console.log('User saved:', savedUser);
+      
+      if (!savedToken) {
+        console.error('Token not saved to localStorage!');
+        setError('Authentication error. Please try again.');
+        return;
+      }
+      
       // Store authentication status
       localStorage.setItem('isAuthenticated', 'true');
       if (formData.rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       }
       
-      console.log('Login successful:', response);
-      
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Small delay to ensure localStorage is updated
+      setTimeout(() => {
+        // Navigate to dashboard
+        navigate('/dashboard');
+      }, 100);
     } catch (err) {
       console.error('Login error:', err);
       

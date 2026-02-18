@@ -10,6 +10,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
+  withCredentials: false, // Don't send cookies, we use Bearer tokens
 });
 
 // Add token to requests
