@@ -51,7 +51,7 @@ class TakenTaskController extends Controller
 
         // Add users data to each assignment
         foreach ($assignments->items() as $assignment) {
-            $assignment->assigned_users = $assignment->users();
+            $assignment->assigned_users = $assignment->getUsers();
         }
 
         return response()->json($assignments);
@@ -65,7 +65,7 @@ class TakenTaskController extends Controller
         $assignment = TakenTaskModel::with(['task'])->findOrFail($id);
 
         // Get assigned users
-        $assignment->assigned_users = $assignment->users();
+        $assignment->assigned_users = $assignment->getUsers();
 
         // Calculate duration if both start and end time exist
         $duration = null;
@@ -101,7 +101,7 @@ class TakenTaskController extends Controller
             'status' => $request->status ?? 'pending',
         ]);
 
-        $assignment->assigned_users = $assignment->users();
+        $assignment->assigned_users = $assignment->getUsers();
 
         return response()->json([
             'message' => 'Task assigned successfully to ' . count($request->user_ids) . ' user(s)',
@@ -135,7 +135,7 @@ class TakenTaskController extends Controller
         return response()->json([
             'message' => 'Assignment updated successfully',
             'assignment' => $assignment,
-            'assigned_users' => $assignment->users()
+            'assigned_users' => $assignment->getUsers()
         ]);
     }
 
@@ -170,7 +170,7 @@ class TakenTaskController extends Controller
         return response()->json([
             'message' => 'Task started successfully',
             'assignment' => $assignment,
-            'assigned_users' => $assignment->users()
+            'assigned_users' => $assignment->getUsers()
         ]);
     }
 
@@ -205,7 +205,7 @@ class TakenTaskController extends Controller
         return response()->json([
             'message' => 'Task completed successfully',
             'assignment' => $assignment,
-            'assigned_users' => $assignment->users()
+            'assigned_users' => $assignment->getUsers()
         ]);
     }
 
@@ -225,7 +225,7 @@ class TakenTaskController extends Controller
         return response()->json([
             'message' => 'Task assignment cancelled successfully',
             'assignment' => $assignment,
-            'assigned_users' => $assignment->users()
+            'assigned_users' => $assignment->getUsers()
         ]);
     }
 
@@ -275,7 +275,7 @@ class TakenTaskController extends Controller
 
         // Add assigned users to each assignment
         foreach ($assignments->items() as $assignment) {
-            $assignment->assigned_users = $assignment->users();
+            $assignment->assigned_users = $assignment->getUsers();
         }
 
         return response()->json($assignments);

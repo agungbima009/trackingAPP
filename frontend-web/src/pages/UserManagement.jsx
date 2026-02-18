@@ -10,7 +10,7 @@ function UserManagement() {
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -114,7 +114,7 @@ function UserManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       if (editMode && currentUserId) {
         // Update existing user
@@ -125,7 +125,7 @@ function UserManagement() {
         // For now, we'll show a message
         alert('Create user functionality requires admin registration endpoint');
       }
-      
+
       setShowModal(false);
       loadUsers(filters);
     } catch (err) {
@@ -139,7 +139,7 @@ function UserManagement() {
       setLoading(true);
       const response = await getUserDetails(userId);
       const user = response.user;
-      
+
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -149,7 +149,7 @@ function UserManagement() {
         address: user.address || '',
         status: user.status || 'active'
       });
-      
+
       setCurrentUserId(userId);
       setEditMode(true);
       setShowModal(true);
@@ -176,7 +176,7 @@ function UserManagement() {
 
   const handleToggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+
     if (window.confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this user?`)) {
       try {
         await updateUserStatus(userId, newStatus);
@@ -217,7 +217,7 @@ function UserManagement() {
             onChange={handleFilterChange}
             className="filter-input"
           />
-          
+
           <select
             name="department"
             value={filters.department}
@@ -256,7 +256,7 @@ function UserManagement() {
           <button onClick={handleSearch} className="btn-filter">
             Search
           </button>
-          
+
           <button onClick={handleClearFilters} className="btn-clear">
             Clear
           </button>
@@ -305,7 +305,7 @@ function UserManagement() {
                     <td>{user.position || '-'}</td>
                     <td>
                       <span className="role-badge">
-                        {user.roles && user.roles.length > 0 ? user.roles[0] : 'N/A'}
+                        {user.roles && user.roles.length > 0 ? user.roles[0].name : 'N/A'}
                       </span>
                     </td>
                     <td>
@@ -315,22 +315,22 @@ function UserManagement() {
                     </td>
                     <td>
                       <div className="action-buttons">
-                        <button 
-                          className="btn-action btn-edit" 
+                        <button
+                          className="btn-action btn-edit"
                           onClick={() => handleEdit(user.id)}
                           title="Edit"
                         >
                           ✏️
                         </button>
-                        <button 
-                          className="btn-action btn-toggle" 
+                        <button
+                          className="btn-action btn-toggle"
                           onClick={() => handleToggleStatus(user.id, user.status)}
                           title={user.status === 'active' ? 'Deactivate' : 'Activate'}
                         >
                           {user.status === 'active' ? '🔒' : '🔓'}
                         </button>
-                        <button 
-                          className="btn-action btn-delete" 
+                        <button
+                          className="btn-action btn-delete"
                           onClick={() => handleDelete(user.id)}
                           title="Delete"
                         >

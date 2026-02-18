@@ -16,7 +16,7 @@ class RolePermissionController extends Controller
     public function getRoles()
     {
         $roles = Role::with('permissions')->get();
-        
+
         return response()->json([
             'roles' => $roles
         ]);
@@ -28,7 +28,7 @@ class RolePermissionController extends Controller
     public function getPermissions()
     {
         $permissions = Permission::all();
-        
+
         return response()->json([
             'permissions' => $permissions
         ]);
@@ -45,7 +45,10 @@ class RolePermissionController extends Controller
             'permissions.*' => 'exists:permissions,name'
         ]);
 
-        $role = Role::create(['name' => $request->name]);
+        $role = Role::create([
+            'name' => $request->name,
+            'guard_name' => 'web'
+        ]);
 
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);
@@ -66,7 +69,10 @@ class RolePermissionController extends Controller
             'name' => 'required|string|unique:permissions,name',
         ]);
 
-        $permission = Permission::create(['name' => $request->name]);
+        $permission = Permission::create([
+            'name' => $request->name,
+            'guard_name' => 'web'
+        ]);
 
         return response()->json([
             'message' => 'Permission created successfully',

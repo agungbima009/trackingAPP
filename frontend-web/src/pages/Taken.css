@@ -58,6 +58,102 @@
   font-weight: 600;
 }
 
+/* Filters Section */
+.filters-section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filters-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-select,
+.filter-input {
+  padding: 10px 14px;
+  border: 1px solid #d1d1d6;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: #1d1d1f;
+  min-width: 160px;
+  transition: all 0.2s;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-filter,
+.btn-clear {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filter {
+  background: #000000;
+  color: white;
+}
+
+.btn-filter:hover {
+  background: #333333;
+}
+
+.btn-clear {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.btn-clear:hover {
+  background: #e5e5ea;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-alert {
+  padding: 40px;
+  text-align: center;
+  color: #86868b;
+  font-size: 14px;
+}
+
+.error-alert {
+  background: #ffe5e5;
+  color: #d32f2f;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* User Badges */
+.user-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #86868b;
+}
+
 .taken-content {
   background: white;
   border-radius: 12px;
@@ -172,6 +268,16 @@
   color: #000000;
 }
 
+.status-badge.in_progress {
+  background: #e3f2fd;
+  color: #2196f3;
+}
+
+.status-badge.cancelled {
+  background: #ffebee;
+  color: #f44336;
+}
+
 .date-cell {
   color: #86868b;
   font-size: 13px;
@@ -281,6 +387,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -302,6 +409,7 @@
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;

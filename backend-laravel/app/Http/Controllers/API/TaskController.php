@@ -15,7 +15,7 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TasksModel::with(['takenTasks.user']);
+        $query = TasksModel::with(['takenTasks']);
 
         // Filter by status
         if ($request->has('status')) {
@@ -76,7 +76,7 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-        $task = TasksModel::with(['takenTasks.user'])->findOrFail($id);
+        $task = TasksModel::with(['takenTasks'])->findOrFail($id);
 
         // Get statistics
         $stats = [
@@ -115,7 +115,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task updated successfully',
-            'task' => $task->load('takenTasks.user')
+            'task' => $task->load('takenTasks')
         ]);
     }
 
@@ -168,7 +168,7 @@ class TaskController extends Controller
         return response()->json([
             'message' => count($request->user_ids) . ' user(s) assigned to task successfully',
             'assignment' => $assignment,
-            'assigned_users' => $assignment->users()
+            'assigned_users' => $assignment->getUsers()
         ], 201);
     }
 

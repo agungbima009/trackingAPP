@@ -42,7 +42,7 @@ class TakenTaskModel extends Model
     /**
      * Get all users assigned to this task
      */
-    public function users()
+    public function getUsers()
     {
         // Since user_ids is stored as JSON array, we need to fetch users manually
         if (!$this->user_ids) {
@@ -50,14 +50,6 @@ class TakenTaskModel extends Model
         }
 
         return User::whereIn('id', $this->user_ids)->get();
-    }
-
-    /**
-     * Get users attribute (for eager loading compatibility)
-     */
-    public function getUsersAttribute()
-    {
-        return $this->users();
     }
 
     /**
