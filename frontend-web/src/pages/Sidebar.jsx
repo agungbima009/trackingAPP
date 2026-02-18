@@ -1,16 +1,38 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { logout } from '../services/api';
 import './Sidebar.css';
 
 function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('rememberMe');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect to login even if API call fails
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('rememberMe');
+      navigate('/login');
+    }
+  };
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu);
+  };
 
   const menuItems = [
     { icon: '/icon/Control-Panel.png', label: 'Dashboard', path: '/dashboard' },
     { icon: '/icon/System-Report.png', label: 'Monitoring', path: '/monitoring' },
-    { icon: '📈', label: 'Analytics', path: '/analytics' },
-    { icon: '📁', label: 'Projects', path: '/projects' },
-    { icon: '👥', label: 'Team', path: '/team' }
+    { icon: '/icon/Clipboard.png', label: 'Task', path: '/task' },
+    { icon: '/icon/Audit.png', label: 'Taken', path: '/taken' },
+    { icon: '👥', label: 'Users', path: '/users' }
   ];
 
   const documentItems = [
@@ -75,7 +97,15 @@ function Sidebar() {
             <span className="user-name">shadon</span>
             <span className="user-email">hi@example.com</span>
           </div>
-          <button className="user-menu">⋮</button>
+          <button className="user-menu" onClick={toggleUserMenu}>⋮</button>
+          {showUserMenu && (
+            <div className="user-menu-dropdown">
+              <button className="menu-item" onClick={handleLogout}>
+                <img src="/icon/Logout.png" alt="Logout" className="menu-icon" />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </aside>

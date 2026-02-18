@@ -11,37 +11,29 @@
   background: white;
 }
 
+/* Leaflet Map Container */
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  border-radius: 8px;
+}
+
+.leaflet-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Map placeholder when no members */
 .map-placeholder {
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 50%, #f5f5f7 100%);
   position: relative;
   overflow: hidden;
-}
-
-.map-grid {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.grid-line {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.grid-line.horizontal {
-  width: 100%;
-  height: 1px;
-  left: 0;
-}
-
-.grid-line.vertical {
-  width: 1px;
-  height: 100%;
-  top: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .map-info {
@@ -80,156 +72,141 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e5ea;
   pointer-events: none;
-  z-index: 50;
+  z-index: 1000;
 }
 
-/* Location Pins */
-.location-pin {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-  cursor: pointer;
-  transition: z-index 0s 0.2s;
+/* Custom Marker Styles */
+.custom-marker-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
-.location-pin:hover {
-  z-index: 100;
-  transition: z-index 0s;
-}
-
-.pin-marker {
+.custom-marker-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   position: relative;
-  width: 24px;
-  height: 24px;
-  margin: 0 auto 8px;
-}
-
-.pin-dot {
-  width: 16px;
-  height: 16px;
-  border: 3px solid white;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 2;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.2s;
+  border: 3px solid white;
 }
 
-/* Status colors for pins */
-.pin-marker.active .pin-dot {
-  background: #000000;
+.custom-marker-pin:hover {
+  transform: scale(1.2);
+  z-index: 1000;
 }
 
-.pin-marker.inactive .pin-dot {
-  background: #86868b;
-}
-
-.pin-marker.offline .pin-dot {
-  background: #d2d2d7;
-}
-
-.location-pin:hover .pin-dot {
-  transform: translate(-50%, -50%) scale(1.2);
-}
-
-.pin-pulse {
-  width: 24px;
-  height: 24px;
-  background: rgba(0, 0, 0, 0.2);
+.marker-inner {
+  width: 12px;
+  height: 12px;
+  background: white;
   border-radius: 50%;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: pulse 2s ease-out infinite;
 }
 
-@keyframes pulse {
+.marker-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.6;
+  animation: markerPulse 2s ease-out infinite;
+}
+
+@keyframes markerPulse {
   0% {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    opacity: 0.6;
   }
   100% {
-    transform: translate(-50%, -50%) scale(2.5);
+    transform: translate(-50%, -50%) scale(2);
     opacity: 0;
   }
 }
 
-.pin-label {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+/* Leaflet Popup Customization */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e5ea;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+
+.marker-popup {
+  padding: 12px;
+}
+
+.marker-popup h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
   font-weight: 600;
   color: #1d1d1f;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e5e5ea;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(5px);
-  transition: all 0.2s;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 120px;
+  border-bottom: 1px solid #e5e5ea;
+  padding-bottom: 8px;
 }
 
-.pin-label.visible,
-.location-pin:hover .pin-label {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.member-team {
-  font-size: 10px;
-  font-weight: 500;
-  color: #86868b;
-  text-transform: capitalize;
-}
-
-/* Map Controls */
-.map-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+.popup-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 100;
 }
 
-.control-button {
-  width: 40px;
-  height: 40px;
-  background: white;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
-  font-size: 20px;
-  font-weight: 600;
+.popup-info p {
+  margin: 0;
+  font-size: 13px;
   color: #1d1d1f;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 8px;
 }
 
-.control-button:hover {
-  background: #000000;
-  color: white;
-  border-color: #000000;
-  transform: scale(1.05);
+.popup-info strong {
+  font-weight: 600;
+  min-width: 60px;
 }
 
-.control-button:active {
-  transform: scale(0.95);
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.inactive {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.status-badge.offline {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.coordinates {
+  font-family: 'Courier New', monospace;
+  font-size: 11px !important;
+  color: #86868b !important;
+}
+
+.leaflet-popup-tip {
+  border: 1px solid #e5e5ea;
 }
 
 /* Map Legend */
@@ -242,7 +219,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e5ea;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .legend-item {
@@ -267,38 +244,36 @@
 }
 
 .legend-marker.active {
-  background: #000000;
+  background: #22c55e;
 }
 
 .legend-marker.inactive {
-  background: #86868b;
+  background: #f59e0b;
 }
 
 .legend-marker.offline {
-  background: #d2d2d7;
+  background: #ef4444;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .map-controls {
-    top: 10px;
-    right: 10px;
-  }
-
-  .control-button {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
-  }
-
   .map-legend {
     bottom: 10px;
     left: 10px;
     padding: 12px;
   }
 
-  .pin-label {
-    font-size: 11px;
-    padding: 4px 8px;
+  .map-info-small {
+    top: 10px;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .marker-popup h3 {
+    font-size: 14px;
+  }
+
+  .popup-info p {
+    font-size: 12px;
   }
 }
