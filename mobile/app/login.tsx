@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,20 +9,136 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { authAPI } from '@/services/api';
+import { API_BASE_URL } from '@/config/api.config';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // Handle focus untuk scroll ke input yang aktif
+  const handleInputFocus = (offsetY: number = 0) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: offsetY,
+        animated: true,
+      });
+    }, 300);
+  };
+
+  // Handle keyboard hide untuk kembali ke posisi awal
+  React.useEffect(() => {
+    const keyboardHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        scrollViewRef.current?.scrollTo({
+          y: 0,
+          animated: true,
+        });
+      }
+    );
+
+    return () => {
+      keyboardHideListener.remove();
+    };
+  }, []);
+
+  // Validasi email
+  const validateEmail = (emailStr: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let error = '';
+    
+    if (emailStr && !emailRegex.test(emailStr)) {
+      error = 'Please enter a valid email address';
+    }
+
+    setEmailError(error);
+    return emailRegex.test(emailStr) || !emailStr;
+  };
+
+  const handleEmailChange = (emailStr: string) => {
+    setEmail(emailStr);
+    // Update error message on each change
+    if (emailStr) {
+      validateEmail(emailStr);
+    } else {
+      setEmailError('');
+    }
+  };
+
+  // Validasi password
+  const validatePassword = (pwd: string) => {
+    const hasMinLength = pwd.length >= 8;
+    const hasLetter = /[a-zA-Z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+
+    let error = '';
+    if (pwd && !hasMinLength) {
+      error = 'Password must be at least 8 characters';
+    } else if (pwd && !hasLetter) {
+      error = 'Password must contain at least one letter';
+    } else if (pwd && !hasNumber) {
+      error = 'Password must contain at least one number';
+    }
+
+    setPasswordError(error);
+    return hasMinLength && hasLetter && hasNumber;
+  };
+
+  const handlePasswordChange = (pwd: string) => {
+    setPassword(pwd);
+    // Update error message on each change
+    if (pwd) {
+      validatePassword(pwd);
+    } else {
+      setPasswordError('');
+    }
+  };
+
+  // Test API connectivity
+  const testAPIConnection = async () => {
+    try {
+      console.log(`Testing connection to ${API_BASE_URL}`);
+      const response = await axios.get(`${API_BASE_URL}/test`, {
+        timeout: 5000,
+      });
+      console.log('Connection test successful:', response.data);
+      Alert.alert('Connection Success', `✓ Backend is running at ${API_BASE_URL}`);
+      return true;
+    } catch (error: any) {
+      console.log('Connection test failed:', error.message);
+      let message = `Cannot connect to ${API_BASE_URL}\n\n`;
+      
+      if (error.code === 'ECONNREFUSED') {
+        message += 'Backend is not running. Start it with:\ncd backend-laravel\nphp artisan serve';
+      } else if (error.code === 'ECONNABORTED') {
+        message += 'Connection timeout. Backend may be overloaded or server is down.';
+      } else if (error.message === 'Network Error') {
+        message += 'Network unreachable. Check if device and server are on same network.';
+      } else {
+        message += `Error: ${error.message}`;
+      }
+      
+      Alert.alert('Connection Failed', message);
+      return false;
+    }
+  };
 
   const handleLogin = async () => {
     // Validasi input
@@ -31,23 +147,34 @@ export default function LoginScreen() {
       return;
     }
 
+    // Validasi email format
+    if (!validateEmail(email)) {
+      return;
+    }
+
+    // Validasi password sebelum login
+    if (!validatePassword(password)) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulasi login - ganti dengan API call yang sebenarnya
-      // await axios.post('your-api-url/login', { email, password });
-      
-      // Simulasi delay untuk API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Test connection first
+      const isConnected = await testAPIConnection();
+      if (!isConnected) {
+        setIsLoading(false);
+        return;
+      }
 
-      // Simpan token di AsyncStorage
-      await AsyncStorage.setItem('userToken', 'dummy-token-123');
-      await AsyncStorage.setItem('userEmail', email);
+      // Call actual login API
+      const response = await authAPI.login(email, password);
       
       // Navigate ke tabs
       router.replace('/(tabs)');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Login Failed', 'Invalid email or password');
+      const errorMessage = error.message || 'Invalid email or password';
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -56,64 +183,80 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar style="light" backgroundColor="#1F2937" />
+      {/* Decorative Background */}
+      <View style={styles.backgroundDecor}>
+        <View style={[styles.circle, styles.circleTop]} />
+        <View style={[styles.circle, styles.circleBottom]} />
+      </View>
+
+      {/* Form Section with Keyboard Handling */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Decorative Background */}
-          <View style={styles.backgroundDecor}>
-            <View style={[styles.circle, styles.circleTop]} />
-            <View style={[styles.circle, styles.circleBottom]} />
-          </View>
-
-          {/* Header Section */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logo}>
-                <IconSymbol size={40} name="location.fill" color="#FFFFFF" />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Header Section - Will scroll up with keyboard */}
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <View style={styles.logo}>
+                  <IconSymbol size={40} name="location.fill" color="#FFFFFF" />
+                </View>
               </View>
+              <Text style={styles.appTitle}>MOOD TRACKER</Text>
+              <Text style={styles.subtitle}>Track Your Journey</Text>
             </View>
-            <Text style={styles.appTitle}>MOOD TRACKER</Text>
-            <Text style={styles.subtitle}>Track Your Journey</Text>
-          </View>
 
-          {/* Login Form */}
-          <View style={styles.formContainer}>
+            {/* Login Form */}
+            <View style={styles.formContainer}>
             <Text style={styles.welcomeText}>Welcome Back!</Text>
             <Text style={styles.loginSubtext}>Sign in to continue tracking</Text>
 
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <View style={[styles.inputWrapper, emailError && styles.inputWrapperError]}>
                 <IconSymbol size={20} name="envelope.fill" color="#6B7280" />
                 <TextInput
                   style={styles.input}
-                  placeholder="Email Address"
-                  placeholderTextColor="#6B7280"
+                  placeholder="you@example.com"
+                  placeholderTextColor="#9CA3AF"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={handleEmailChange}
+                  onFocus={() => handleInputFocus(200)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   editable={!isLoading}
                 />
               </View>
+              {emailError && (
+                <View style={styles.errorContainer}>
+                  <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
+                  <Text style={styles.errorText}>{emailError}</Text>
+                </View>
+              )}
             </View>
 
             {/* Password Input */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <View style={[styles.inputWrapper, passwordError && styles.inputWrapperError]}>
                 <IconSymbol size={20} name="lock.fill" color="#6B7280" />
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
                   placeholderTextColor="#6B7280"
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={handlePasswordChange}
+                  onFocus={() => handleInputFocus(300)}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   editable={!isLoading}
@@ -130,6 +273,12 @@ export default function LoginScreen() {
                   />
                 </TouchableOpacity>
               </View>
+              {passwordError && (
+                <View style={styles.errorContainer}>
+                  <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
+                  <Text style={styles.errorText}>{passwordError}</Text>
+                </View>
+              )}
             </View>
 
             {/* Remember Me & Forgot Password */}
@@ -161,36 +310,9 @@ export default function LoginScreen() {
               </Text>
               {!isLoading && <IconSymbol size={20} name="arrow.right" color="#FFFFFF" />}
             </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Login Buttons */}
-            <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-                <IconSymbol size={24} name="globe" color="#6B7280" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-                <IconSymbol size={24} name="envelope.fill" color="#6B7280" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-                <IconSymbol size={24} name="phone.fill" color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Sign Up Link */}
-            <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
-              <TouchableOpacity disabled={isLoading}>
-                <Text style={styles.signUpLink}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -204,9 +326,11 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  scrollContent: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 40,
   },
   backgroundDecor: {
     position: 'absolute',
@@ -232,8 +356,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: 40,
+    paddingBottom: 30,
   },
   logoContainer: {
     marginBottom: 20,
@@ -267,7 +391,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     paddingHorizontal: 24,
     paddingTop: 40,
-    marginTop: 20,
+    paddingBottom: 20,
   },
   welcomeText: {
     fontSize: 24,
@@ -282,6 +406,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -301,6 +431,22 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     padding: 4,
+  },
+  inputWrapperError: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '500',
   },
   optionsRow: {
     flexDirection: 'row',
@@ -342,7 +488,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
+    marginTop: 10,
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
