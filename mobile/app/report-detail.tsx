@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import * as ImagePicker from 'expo-image-picker';
 
 interface LocationPoint {
   id: string;
@@ -12,9 +13,21 @@ interface LocationPoint {
   notes?: string;
 }
 
+interface Photo {
+  id: string;
+  uri: string;
+  name: string;
+}
+
 export default function ReportDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  
+  // State management
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [reportDescription, setReportDescription] = useState('Inspeksi rutin gedung sudah selesai. Tidak ada temuan masalah. Semua sistem berjalan normal dan tidak terlihat kerusakan struktural maupun sistem elektrikal.');
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   // Sample report data (in real app, fetch based on params.reportId)
   const report = {
@@ -24,17 +37,107 @@ export default function ReportDetailScreen() {
     date: '16 Feb 2026',
     time: '14:30',
     status: 'completed',
-    description: 'Inspeksi rutin gedung sudah selesai. Tidak ada temuan masalah. Semua sistem berjalan normal dan tidak terlihat kerusakan struktural maupun sistem elektrikal.',
     startTime: '08:00',
     endTime: '14:30',
     duration: '6.5 jam',
     hasPhoto: true,
-    photoCount: 3,
-    photos: [
-      'Photo 1', // In real app: actual image URIs
-      'Photo 2',
-      'Photo 3',
-    ],
+  };
+
+  // Handle adding photo from camera
+  const handleCameraPhoto = async () => {
+    setShowPhotoOptions(false);
+    try {
+      // Request camera permissions
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Akses Ditolak', 'Izin kamera diperlukan untuk mengambil foto');
+        return;
+      }
+
+      // Launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const newPhoto: Photo = {
+          id: Date.now().toString(),
+          uri: asset.uri,
+          name: `Photo ${photos.length + 1}`,
+        };
+        setPhotos([...photos, newPhoto]);
+        Alert.alert('Sukses', 'Foto berhasil ditambahkan');
+      }
+    } catch (error) {
+      Alert.alert('Kesalahan', 'Terjadi kesalahan saat mengambil foto');
+      console.error(error);
+    }
+  };
+
+  // Handle selecting photo from gallery
+  const handleGalleryPhoto = async () => {
+    setShowPhotoOptions(false);
+    try {
+      // Request media library permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Akses Ditolak', 'Izin galeri diperlukan untuk memilih foto');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const newPhoto: Photo = {
+          id: Date.now().toString(),
+          uri: asset.uri,
+          name: `Photo ${photos.length + 1}`,
+        };
+        setPhotos([...photos, newPhoto]);
+        Alert.alert('Sukses', 'Foto berhasil ditambahkan');
+      }
+    } catch (error) {
+      Alert.alert('Kesalahan', 'Terjadi kesalahan saat memilih foto');
+      console.error(error);
+    }
+  };
+
+  // Handle removing photo
+  const handleRemovePhoto = (photoId: string) => {
+    Alert.alert('Hapus Foto', 'Apakah Anda yakin ingin menghapus foto ini?', [
+      {
+        text: 'Batal',
+        style: 'cancel'
+      },
+      {
+        text: 'Hapus',
+        onPress: () => {
+          setPhotos(photos.filter(p => p.id !== photoId));
+        },
+        style: 'destructive'
+      }
+    ]);
+  };
+
+  // Handle save description
+  const handleSaveDescription = () => {
+    if (reportDescription.trim() === '') {
+      Alert.alert('Peringatan', 'Deskripsi tidak boleh kosong');
+      return;
+    }
+    setIsEditingDescription(false);
+    Alert.alert('Sukses', 'Deskripsi laporan telah diperbarui');
   };
 
   // Location history from tracking
@@ -95,7 +198,7 @@ export default function ReportDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -151,37 +254,108 @@ export default function ReportDetailScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
-          <View style={styles.descriptionCard}>
-            <Text style={styles.descriptionText}>{report.description}</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                if (isEditingDescription) {
+                  handleSaveDescription();
+                } else {
+                  setIsEditingDescription(true);
+                }
+              }}
+              style={styles.editButton}
+            >
+              <IconSymbol 
+                size={16} 
+                name={isEditingDescription ? "checkmark" : "pencil"} 
+                color="#FFFFFF" 
+              />
+              <Text style={styles.editButtonText}>
+                {isEditingDescription ? 'Simpan' : 'Edit'}
+              </Text>
+            </TouchableOpacity>
           </View>
+          
+          {isEditingDescription ? (
+            <View style={styles.descriptionEditCard}>
+              <TextInput
+                style={styles.descriptionInput}
+                multiline
+                placeholder="Masukkan deskripsi laporan..."
+                placeholderTextColor="#9CA3AF"
+                value={reportDescription}
+                onChangeText={setReportDescription}
+              />
+              <TouchableOpacity 
+                onPress={() => setIsEditingDescription(false)}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.cancelButtonText}>Batal</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.descriptionCard}>
+              <Text style={styles.descriptionText}>{reportDescription}</Text>
+            </View>
+          )}
         </View>
 
         {/* Photos */}
-        {report.hasPhoto && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Foto Dokumentasi</Text>
-              <View style={styles.photoCountBadge}>
-                <IconSymbol size={14} name="photo.fill" color="#3B82F6" />
-                <Text style={styles.photoCountText}>{report.photoCount} Foto</Text>
-              </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Foto Dokumentasi</Text>
+            <View style={styles.photoCountBadge}>
+              <IconSymbol size={14} name="photo.fill" color="#3B82F6" />
+              <Text style={styles.photoCountText}>{photos.length} Foto</Text>
             </View>
-            
+          </View>
+          
+          {photos.length === 0 ? (
+            // Tampilkan tombol tambah foto ketika tidak ada foto
+            <TouchableOpacity 
+              style={styles.photoItem}
+              onPress={() => setShowPhotoOptions(true)}
+            >
+              <View style={styles.uploadPhotoPlaceholder}>
+                <IconSymbol size={32} name="plus" color="#3B82F6" />
+                <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            // Tampilkan galeri foto dengan tombol tambah di akhir
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.photosGrid}>
-                {report.photos.map((photo, index) => (
-                  <TouchableOpacity key={index} style={styles.photoItem}>
-                    <View style={styles.photoPlaceholder}>
-                      <IconSymbol size={32} name="photo" color="#9CA3AF" />
-                      <Text style={styles.photoPlaceholderText}>{photo}</Text>
-                    </View>
-                  </TouchableOpacity>
+                {/* Existing Photos */}
+                {photos.map((photo) => (
+                  <View key={photo.id} style={styles.photoItem}>
+                    <Image
+                      source={{ uri: photo.uri }}
+                      style={styles.photoImage}
+                    />
+                    <TouchableOpacity 
+                      style={styles.photoDeleteButton}
+                      onPress={() => handleRemovePhoto(photo.id)}
+                    >
+                      <IconSymbol size={16} name="xmark" color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
                 ))}
+
+                {/* Upload Photo Button */}
+                <TouchableOpacity 
+                  style={styles.photoItem}
+                  onPress={() => setShowPhotoOptions(true)}
+                >
+                  <View style={styles.uploadPhotoPlaceholder}>
+                    <IconSymbol size={32} name="plus" color="#3B82F6" />
+                    <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+                  </View>
+                </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
-        )}
+          )}
+        </View>
 
         {/* Location Tracking */}
         <View style={styles.section}>
@@ -274,6 +448,65 @@ export default function ReportDetailScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Photo Upload Options Modal */}
+      <Modal
+        visible={showPhotoOptions}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPhotoOptions(false)}
+      >
+        <SafeAreaView style={styles.modalContainer} edges={[]}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Tambah Foto</Text>
+                <TouchableOpacity onPress={() => setShowPhotoOptions(false)}>
+                  <IconSymbol size={24} name="xmark" color="#1F2937" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalOptions}>
+                <TouchableOpacity 
+                  style={styles.modalOption}
+                  onPress={handleCameraPhoto}
+                >
+                  <View style={styles.modalOptionIcon}>
+                    <IconSymbol size={32} name="camera.fill" color="#3B82F6" />
+                  </View>
+                  <View style={styles.modalOptionText}>
+                    <Text style={styles.modalOptionTitle}>Ambil Foto Kamera</Text>
+                    <Text style={styles.modalOptionDesc}>Ambil foto menggunakan kamera perangkat</Text>
+                  </View>
+                  <IconSymbol size={20} name="chevron.right" color="#D1D5DB" />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.modalOption}
+                  onPress={handleGalleryPhoto}
+                >
+                  <View style={styles.modalOptionIcon}>
+                    <IconSymbol size={32} name="photo.on.rectangle" color="#10B981" />
+                  </View>
+                  <View style={styles.modalOptionText}>
+                    <Text style={styles.modalOptionTitle}>Pilih dari Galeri</Text>
+                    <Text style={styles.modalOptionDesc}>Pilih foto dari galeri perangkat</Text>
+                  </View>
+                  <IconSymbol size={20} name="chevron.right" color="#D1D5DB" />
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.modalCancelButton}
+                onPress={() => setShowPhotoOptions(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <View style={{ height: 20 }} />
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -387,10 +620,52 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
   },
+  descriptionEditCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+  },
+  descriptionInput: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    minHeight: 120,
+    textAlignVertical: 'top',
+    marginBottom: 12,
+  },
   descriptionText: {
     fontSize: 15,
     color: '#4B5563',
     lineHeight: 24,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  editButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
   },
   photoCountBadge: {
     flexDirection: 'row',
@@ -411,21 +686,42 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   photoItem: {
-    width: 160,
-    height: 160,
+    width: 200,
+    height: 200,
     borderRadius: 12,
     overflow: 'hidden',
+    position: 'relative',
   },
-  photoPlaceholder: {
+  photoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  uploadPhotoPlaceholder: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+    borderStyle: 'dashed',
+    borderRadius: 12,
   },
-  photoPlaceholderText: {
+  uploadPhotoText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  photoDeleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   locationCountBadge: {
     flexDirection: 'row',
@@ -558,5 +854,78 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#3B82F6',
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  modalOptions: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+  },
+  modalOptionIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOptionText: {
+    flex: 1,
+  },
+  modalOptionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  modalOptionDesc: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6B7280',
   },
 });
