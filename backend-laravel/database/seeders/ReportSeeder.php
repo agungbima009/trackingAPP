@@ -80,14 +80,14 @@ class ReportSeeder extends Seeder
 
         foreach ($completedTasks as $takenTask) {
             $userIds = $takenTask->user_ids ?? [];
-            
+
             if (empty($userIds)) {
                 continue;
             }
 
             // Select a random report template
             $template = $reportTemplates[array_rand($reportTemplates)];
-            
+
             // Some completed tasks might have reports from multiple team members
             $numberOfReports = (count($userIds) > 1 && rand(1, 10) > 7) ? rand(1, count($userIds)) : 1;
             $reportingUsers = array_slice($userIds, 0, $numberOfReports);
@@ -95,10 +95,10 @@ class ReportSeeder extends Seeder
             foreach ($reportingUsers as $userId) {
                 // Add some variation to the report content
                 $reportContent = $template['title'] . "\n\n" . $template['content'];
-                
+
                 // Add timestamp
                 $reportContent .= "\n\nReport submitted by user at: " . now()->format('Y-m-d H:i:s');
-                
+
                 // Randomly decide if this report has an image (30% chance)
                 $hasImage = rand(1, 10) <= 3;
                 $imagePath = $hasImage ? 'reports/' . uniqid() . '_report_image.jpg' : null;

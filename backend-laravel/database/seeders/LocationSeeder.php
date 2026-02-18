@@ -40,7 +40,7 @@ class LocationSeeder extends Seeder
 
         foreach ($takenTasks as $takenTask) {
             $userIds = $takenTask->user_ids ?? [];
-            
+
             if (empty($userIds)) {
                 continue;
             }
@@ -55,29 +55,29 @@ class LocationSeeder extends Seeder
             // Get start and end times
             $startTime = Carbon::parse($takenTask->start_time);
             $endTime = $takenTask->end_time ? Carbon::parse($takenTask->end_time) : Carbon::now();
-            
+
             // Calculate the time interval between location points
             $totalMinutes = $startTime->diffInMinutes($endTime);
             $intervalMinutes = $totalMinutes > 0 ? intval($totalMinutes / $locationCount) : 15;
 
             // Select a base location for this task
             $baseLocation = $sampleLocations[array_rand($sampleLocations)];
-            
+
             // Create location points for each user assigned to this task
             foreach ($userIds as $userId) {
                 for ($i = 0; $i < $locationCount; $i++) {
                     $recordedAt = $startTime->copy()->addMinutes($intervalMinutes * $i);
-                    
+
                     // Add slight variations to coordinates to simulate movement
                     $latVariation = (rand(-100, 100) / 10000); // ±0.01 degrees
                     $lngVariation = (rand(-100, 100) / 10000);
-                    
+
                     $latitude = $baseLocation[0] + $latVariation;
                     $longitude = $baseLocation[1] + $lngVariation;
-                    
+
                     // Alternate between auto and manual tracking
                     $trackingStatus = ($i % 5 === 0) ? 'manual' : 'auto';
-                    
+
                     // Add some realistic accuracy variation
                     $accuracy = rand(5, 50) + (rand(0, 100) / 100);
 

@@ -88,11 +88,11 @@ class TakenTaskSeeder extends Seeder
 
         $this->command->info('Task assignments seeded successfully!');
         $this->command->info('Created ' . count($takenTasks) . ' task assignments');
-        
+
         $completedCount = collect($takenTasks)->where('status', 'completed')->count();
         $inProgressCount = collect($takenTasks)->where('status', 'in_progress')->count();
         $pendingCount = collect($takenTasks)->where('status', 'pending')->count();
-        
+
         $this->command->info('  - Completed: ' . $completedCount);
         $this->command->info('  - In Progress: ' . $inProgressCount);
         $this->command->info('  - Pending: ' . $pendingCount);
