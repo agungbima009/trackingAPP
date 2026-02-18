@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Task.css';
-import { getTasks, createTask, updateTask, deleteTask, getTaskDetails } from '../services/api';
+import { getTasks, createTask, updateTask, deleteTask, getTaskDetails } from '../../services/api';
 
 function Task() {
   const [showModal, setShowModal] = useState(false);
@@ -11,13 +11,41 @@ function Task() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     location: '',
-    status: 'pending'
+    status: 'active'
   });
+
+  // Toast notification function
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
+  // Show confirmation modal
+  const showConfirmModal = (title, message, onConfirm, type = 'delete') => {
+    setConfirmModal({ show: true, title, message, onConfirm, type });
+  };
+
+  // Handle confirm action
+  const handleConfirm = () => {
+    if (confirmModal.onConfirm) {
+      confirmModal.onConfirm();
+    }
+    setConfirmModal({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
+  };
+
+  // Handle cancel confirmation
+  const handleCancelConfirm = () => {
+    setConfirmModal({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
+  };
 
   // Load tasks on component mount
   useEffect(() => {
@@ -60,7 +88,7 @@ function Task() {
         localStorage.removeItem('isAuthenticated');
         window.location.href = '/login';
       } else {
-        alert('Gagal memuat data task. Silakan coba lagi.');
+        showToast('Gagal memuat data task. Silakan coba lagi.', 'error');
       }
     } finally {
       setLoading(false);
@@ -83,7 +111,7 @@ function Task() {
       title: '',
       description: '',
       location: '',
-      status: 'pending'
+      status: 'active'
     });
   };
 
@@ -108,11 +136,11 @@ function Task() {
       if (isEditMode && editingTaskId) {
         // Update existing task
         await updateTask(editingTaskId, formData);
-        alert('Task berhasil diperbarui!');
+        showToast('Task berhasil diperbarui!', 'success');
       } else {
         // Create new task
         await createTask(formData);
-        alert('Task berhasil dibuat!');
+        showToast('Task berhasil dibuat!', 'success');
       }
       
       setShowModal(false);
@@ -123,11 +151,11 @@ function Task() {
         title: '',
         description: '',
         location: '',
-        status: 'pending'
+        status: 'active'
       });
     } catch (error) {
       console.error('Error saving task:', error);
-      alert('Gagal menyimpan task. Silakan coba lagi.');
+      showToast('Gagal menyimpan task. Silakan coba lagi.', 'error');
     }
   };
 
@@ -147,21 +175,52 @@ function Task() {
       setShowModal(true);
     } catch (error) {
       console.error('Error loading task details:', error);
-      alert('Gagal memuat detail task.');
+      showToast('Gagal memuat detail task.', 'error');
     }
   };
 
   const handleDelete = async (taskId) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus task ini?')) {
-      try {
-        await deleteTask(taskId);
-        alert('Task berhasil dihapus!');
-        loadTasks(); // Reload tasks
-      } catch (error) {
-        console.error('Error deleting task:', error);
-        alert('Gagal menghapus task. Silakan coba lagi.');
-      }
-    }
+    showConfirmModal(
+      'Hapus Task',
+      'Apakah Anda yakin ingin menghapus task ini? Tindakan ini tidak dapat dibatalkan.',
+      async () => {
+        try {
+          await deleteTask(taskId);
+          showToast('Task berhasil dihapus!', 'success');
+          loadTasks(); // Reload tasks
+        } catch (error) {
+          console.error('Error deleting task:', error);
+          
+          // Show specific error message from backend
+          if (error.response?.status === 422) {
+            const errorMessage = error.response?.data?.message || 
+              'Task tidak dapat dihapus karena masih memiliki assignment. Hapus assignment terlebih dahulu.';
+            showToast(errorMessage, 'warning');
+          } else {
+            showToast('Gagal menghapus task. Silakan coba lagi.', 'error');
+          }
+        }
+      },
+      'delete'
+    );
+  };
+
+  const handleMarkAsCompleted = async (taskId) => {
+    showConfirmModal(
+      'Tandai Selesai',
+      'Tandai task ini sebagai selesai?',
+      async () => {
+        try {
+          await updateTask(taskId, { status: 'completed' });
+          showToast('Task berhasil ditandai sebagai selesai!', 'success');
+          loadTasks(); // Reload tasks
+        } catch (error) {
+          console.error('Error marking task as completed:', error);
+          showToast('Gagal mengupdate status task. Silakan coba lagi.', 'error');
+        }
+      },
+      'complete'
+    );
   };
 
   const formatDate = (dateString) => {
@@ -177,9 +236,8 @@ function Task() {
   const getStatusBadgeClass = (status) => {
     const statusMap = {
       'pending': 'status-pending',
-      'in_progress': 'status-in-progress',
-      'completed': 'status-completed',
-      'cancelled': 'status-cancelled'
+      'active': 'status-in-progress',
+      'completed': 'status-completed'
     };
     return statusMap[status] || '';
   };
@@ -187,15 +245,68 @@ function Task() {
   const getStatusLabel = (status) => {
     const labelMap = {
       'pending': 'Pending',
-      'in_progress': 'In Progress',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled'
+      'active': 'Active',
+      'completed': 'Completed'
     };
     return labelMap[status] || status;
   };
 
   return (
     <div className="task-page">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          <div className="toast-icon">
+            {toast.type === 'success' && '✓'}
+            {toast.type === 'error' && '✕'}
+            {toast.type === 'warning' && '⚠'}
+            {toast.type === 'info' && 'ℹ'}
+          </div>
+          <div className="toast-message">{toast.message}</div>
+          <button 
+            className="toast-close" 
+            onClick={() => setToast({ show: false, message: '', type: '' })}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.show && (
+        <div className="confirm-overlay" onClick={handleCancelConfirm}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">
+              {confirmModal.type === 'delete' && (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="24" fill="#FEE2E2"/>
+                  <path d="M16 18H18H32M30 18V32C30 32.5304 29.7893 33.0391 29.4142 33.4142C29.0391 33.7893 28.5304 34 28 34H20C19.4696 34 18.9609 33.7893 18.5858 33.4142C18.2107 33.0391 18 32.5304 18 32V18M21 18V16C21 15.4696 21.2107 14.9609 21.5858 14.5858C21.9609 14.2107 22.4696 14 23 14H25C25.5304 14 26.0391 14.2107 26.4142 14.5858C26.7893 14.9609 27 15.4696 27 16V18" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              {confirmModal.type === 'complete' && (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="24" fill="#D1FAE5"/>
+                  <path d="M32 18L21 29L16 24" stroke="#34C759" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+            <h3 className="confirm-title">{confirmModal.title}</h3>
+            <p className="confirm-message">{confirmModal.message}</p>
+            <div className="confirm-actions">
+              <button className="btn-confirm-cancel" onClick={handleCancelConfirm}>
+                Batal
+              </button>
+              <button 
+                className={`btn-confirm-ok ${confirmModal.type}`} 
+                onClick={handleConfirm}
+              >
+                {confirmModal.type === 'delete' ? 'Hapus' : 'Ya, Tandai Selesai'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="task-header">
         <div>
           <h1>Task Management</h1>
@@ -212,7 +323,7 @@ function Task() {
         <div className="filter-group">
           <input
             type="text"
-            placeholder="🔍 Cari task..."
+            placeholder="Cari task..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -226,9 +337,8 @@ function Task() {
           >
             <option value="">Semua Status</option>
             <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
+            <option value="active">Active</option>
             <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
           </select>
         </div>
         <div className="filter-group">
@@ -258,6 +368,7 @@ function Task() {
                   <th>Description</th>
                   <th>Location</th>
                   <th>Status</th>
+                  <th>Assignments</th>
                   <th>Created At</th>
                   <th className="actions-header">Actions</th>
                 </tr>
@@ -265,7 +376,7 @@ function Task() {
               <tbody>
                 {tasks.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="empty-state">
+                    <td colSpan="8" className="empty-state">
                       <div className="empty-content">
                         <span className="empty-icon">📋</span>
                         <p>Belum ada task</p>
@@ -285,8 +396,29 @@ function Task() {
                           {getStatusLabel(task.status)}
                         </span>
                       </td>
+                      <td className="assignment-count">
+                        {(task.taken_tasks || task.takenTasks)?.length > 0 ? (
+                          <span className="assignment-badge">
+                            👥 {(task.taken_tasks || task.takenTasks).length}
+                          </span>
+                        ) : (
+                          <span className="no-assignment">-</span>
+                        )}
+                      </td>
                       <td className="date-cell">{formatDate(task.created_at)}</td>
                       <td className="actions-cell">
+                        {/* Show checkmark button only if status is not completed */}
+                        {task.status !== 'completed' && (
+                          <button 
+                            className="action-btn complete-btn" 
+                            onClick={() => handleMarkAsCompleted(task.task_id)}
+                            title="Tandai Selesai"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M13.3337 4L6.00033 11.3333L2.66699 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
                         <button 
                           className="action-btn edit-btn" 
                           onClick={() => handleEdit(task.task_id)}
@@ -299,7 +431,9 @@ function Task() {
                         <button 
                           className="action-btn delete-btn" 
                           onClick={() => handleDelete(task.task_id)}
-                          title="Delete"
+                          title={(task.taken_tasks || task.takenTasks)?.length > 0 
+                            ? "⚠️ Task ini memiliki assignment. Hapus assignment terlebih dahulu!" 
+                            : "Delete"}
                         >
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2 4H3.33333H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -381,9 +515,7 @@ function Task() {
                   required
                 >
                   <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="active">Active</option>
                 </select>
               </div>
 

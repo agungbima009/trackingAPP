@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, getUserDetails, updateUserProfile, updateUserStatus, deleteUser, getDepartments } from '../services/api';
+import { getUsers, getUserDetails, updateUserProfile, updateUserStatus, deleteUser, getDepartments } from '../../services/api';
 import './UserManagement.css';
 
 function UserManagement() {

@@ -89,8 +89,8 @@ class TakenTaskController extends Controller
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
             'date' => 'nullable|date',
-            'start_time' => 'nullable|date_format:Y-m-d H:i:s',
-            'status' => 'nullable|in:pending,in_progress,completed,cancelled',
+            'start_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s',
+            'status' => 'nullable|in:pending,active,completed',
         ]);
 
         $assignment = TakenTaskModel::create([
@@ -117,9 +117,9 @@ class TakenTaskController extends Controller
         $assignment = TakenTaskModel::findOrFail($id);
 
         $request->validate([
-            'status' => 'sometimes|required|in:pending,in_progress,completed,cancelled',
-            'start_time' => 'nullable|date_format:Y-m-d H:i:s',
-            'end_time' => 'nullable|date_format:Y-m-d H:i:s|after:start_time',
+            'status' => 'sometimes|required|in:pending,active,completed',
+            'start_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s',
+            'end_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s|after:start_time',
             'date' => 'nullable|date',
         ]);
 
@@ -161,7 +161,7 @@ class TakenTaskController extends Controller
         }
 
         $assignment->update([
-            'status' => 'in_progress',
+            'status' => 'active',
             'start_time' => now(),
         ]);
 
@@ -189,9 +189,9 @@ class TakenTaskController extends Controller
             ], 403);
         }
 
-        if ($assignment->status !== 'in_progress') {
+        if ($assignment->status !== 'active') {
             return response()->json([
-                'message' => 'Task must be in progress to complete'
+                'message' => 'Task must be active to complete'
             ], 422);
         }
 
@@ -210,20 +210,20 @@ class TakenTaskController extends Controller
     }
 
     /**
-     * Cancel task assignment
+     * Cancel task assignment (set back to pending)
      */
     public function cancelTask($id)
     {
         $assignment = TakenTaskModel::findOrFail($id);
 
         $assignment->update([
-            'status' => 'cancelled',
+            'status' => 'pending',
         ]);
 
         $assignment->load('task');
 
         return response()->json([
-            'message' => 'Task assignment cancelled successfully',
+            'message' => 'Task assignment reset to pending',
             'assignment' => $assignment,
             'assigned_users' => $assignment->getUsers()
         ]);
@@ -289,9 +289,8 @@ class TakenTaskController extends Controller
         $stats = [
             'total_assignments' => TakenTaskModel::whereJsonContains('user_ids', $userId)->count(),
             'completed' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'completed')->count(),
-            'in_progress' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'in_progress')->count(),
+            'active' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'active')->count(),
             'pending' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'pending')->count(),
-            'cancelled' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'cancelled')->count(),
         ];
 
         return response()->json($stats);
