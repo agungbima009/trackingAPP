@@ -79,7 +79,7 @@ export default function LaporanScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Laporan Saya</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <IconSymbol size={24} name="line.3.horizontal.decrease.circle" color="#1F2937" />
+          <IconSymbol size={20} name="line.3.horizontal.decrease.circle" color="#1d1d1f" />
         </TouchableOpacity>
       </View>
 
@@ -94,24 +94,24 @@ export default function LaporanScreen() {
           
           <View style={styles.summaryStats}>
             <View style={styles.summaryStatItem}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: '#3B82F6' }]}>
-                <IconSymbol size={24} name="doc.text.fill" color="#FFFFFF" />
+              <View style={styles.summaryStatIcon}>
+                <IconSymbol size={20} name="doc.text.fill" color="#FFFFFF" />
               </View>
               <Text style={styles.summaryStatValue}>4</Text>
-              <Text style={styles.summaryStatLabel}>Total Laporan</Text>
+              <Text style={styles.summaryStatLabel}>Total</Text>
             </View>
 
             <View style={styles.summaryStatItem}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: '#10B981' }]}>
-                <IconSymbol size={24} name="photo.fill" color="#FFFFFF" />
+              <View style={styles.summaryStatIcon}>
+                <IconSymbol size={20} name="photo.fill" color="#FFFFFF" />
               </View>
               <Text style={styles.summaryStatValue}>8</Text>
-              <Text style={styles.summaryStatLabel}>Foto Dilampirkan</Text>
+              <Text style={styles.summaryStatLabel}>Foto</Text>
             </View>
 
             <View style={styles.summaryStatItem}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: '#8B5CF6' }]}>
-                <IconSymbol size={24} name="checkmark.circle.fill" color="#FFFFFF" />
+              <View style={styles.summaryStatIcon}>
+                <IconSymbol size={20} name="checkmark.circle.fill" color="#FFFFFF" />
               </View>
               <Text style={styles.summaryStatValue}>4</Text>
               <Text style={styles.summaryStatLabel}>Selesai</Text>
@@ -124,14 +124,14 @@ export default function LaporanScreen() {
           <TouchableOpacity style={styles.quickCreateButton}>
             <View style={styles.quickCreateContent}>
               <View style={styles.quickCreateIcon}>
-                <IconSymbol size={28} name="camera.fill" color="#FFFFFF" />
+                <IconSymbol size={22} name="camera.fill" color="#FFFFFF" />
               </View>
               <View style={styles.quickCreateText}>
                 <Text style={styles.quickCreateTitle}>Buat Laporan Baru</Text>
                 <Text style={styles.quickCreateSubtitle}>Foto + Status atau Status Saja</Text>
               </View>
             </View>
-            <IconSymbol size={24} name="chevron.right" color="#3B82F6" />
+            <IconSymbol size={20} name="chevron.right" color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -204,14 +204,14 @@ export default function LaporanScreen() {
                 {/* Report Meta */}
                 <View style={styles.reportMeta}>
                   <View style={styles.reportMetaItem}>
-                    <IconSymbol size={14} name="clock.fill" color="#6B7280" />
+                    <IconSymbol size={14} name="clock.fill" color="#86868b" />
                     <Text style={styles.reportMetaText}>
                       {report.date} • {report.time}
                     </Text>
                   </View>
                   
                   <View style={styles.reportMetaItem}>
-                    <IconSymbol size={14} name="location.fill" color="#6B7280" />
+                    <IconSymbol size={14} name="location.fill" color="#86868b" />
                     <Text style={styles.reportMetaText} numberOfLines={1}>
                       {report.location}
                     </Text>
@@ -221,7 +221,7 @@ export default function LaporanScreen() {
                 {/* Photo Indicator */}
                 {report.hasPhoto && (
                   <View style={styles.photoIndicator}>
-                    <IconSymbol size={16} name="photo.fill" color="#3B82F6" />
+                    <IconSymbol size={14} name="photo.fill" color="#1d1d1f" />
                     <Text style={styles.photoIndicatorText}>
                       {report.photoCount} Foto terlampir
                     </Text>
@@ -231,12 +231,12 @@ export default function LaporanScreen() {
                 {/* Report Actions */}
                 <View style={styles.reportActions}>
                   <TouchableOpacity style={styles.reportActionButton}>
-                    <IconSymbol size={18} name="square.and.arrow.up" color="#6B7280" />
+                    <IconSymbol size={16} name="square.and.arrow.up" color="#86868b" />
                     <Text style={styles.reportActionText}>Share</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity style={styles.reportActionButton}>
-                    <IconSymbol size={18} name="doc.on.doc" color="#6B7280" />
+                    <IconSymbol size={16} name="doc.on.doc" color="#86868b" />
                     <Text style={styles.reportActionText}>Duplikat</Text>
                   </TouchableOpacity>
                   
@@ -244,8 +244,8 @@ export default function LaporanScreen() {
                     style={[styles.reportActionButton, styles.viewButton]}
                     onPress={() => router.push(`/report-detail?reportId=${report.id}`)}
                   >
-                    <IconSymbol size={18} name="eye.fill" color="#3B82F6" />
-                    <Text style={[styles.reportActionText, { color: '#3B82F6' }]}>
+                    <IconSymbol size={16} name="eye.fill" color="#FFFFFF" />
+                    <Text style={[styles.reportActionText, { color: '#FFFFFF' }]}>
                       Lihat Detail
                     </Text>
                   </TouchableOpacity>
@@ -262,28 +262,29 @@ export default function LaporanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f7',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#e5e5ea',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    letterSpacing: -0.3,
   },
   headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -291,22 +292,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
     padding: 20,
     marginHorizontal: 20,
     marginTop: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   summaryStats: {
     flexDirection: 'row',
@@ -314,33 +314,38 @@ const styles = StyleSheet.create({
   },
   summaryStatItem: {
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   summaryStatIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   summaryStatValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
   },
   summaryStatLabel: {
-    fontSize: 11,
-    color: '#6B7280',
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '500',
   },
   quickCreateSection: {
     paddingHorizontal: 20,
+    marginTop: 20,
   },
   quickCreateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#000000',
     borderRadius: 12,
     padding: 16,
   },
@@ -351,10 +356,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quickCreateIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -362,17 +367,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quickCreateTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   quickCreateSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
   },
   filterSection: {
-    marginTop: 24,
+    marginTop: 20,
     paddingHorizontal: 20,
   },
   filterTabs: {
@@ -380,105 +385,105 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterTab: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 4,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#d2d2d7',
   },
   filterTabActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: '#000000',
+    borderColor: '#000000',
   },
   filterTabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#86868b',
   },
   filterTabTextActive: {
     color: '#FFFFFF',
   },
   reportsSection: {
-    marginTop: 24,
+    marginTop: 20,
     paddingHorizontal: 20,
   },
   reportsSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
+    letterSpacing: -0.3,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#3B82F6',
+    color: '#000000',
   },
   reportsList: {
     gap: 12,
-    paddingBottom: 24,
+    paddingBottom: 20,
   },
   reportCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   reportHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   reportHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   reportStatusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   reportId: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#86868b',
   },
   reportStatusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   reportStatusText: {
     fontSize: 10,
     fontWeight: '600',
     color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   reportTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: '#1d1d1f',
+    marginBottom: 6,
   },
   reportDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+    fontSize: 13,
+    color: '#86868b',
+    lineHeight: 19,
     marginBottom: 12,
   },
   reportMeta: {
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 10,
   },
   reportMetaItem: {
     flexDirection: 'row',
@@ -487,49 +492,49 @@ const styles = StyleSheet.create({
   },
   reportMetaText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#86868b',
     flex: 1,
   },
   photoIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: '#f5f5f7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   photoIndicatorText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    color: '#3B82F6',
+    color: '#1d1d1f',
   },
   reportActions: {
     flexDirection: 'row',
     gap: 8,
-    paddingTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#e5e5ea',
   },
   reportActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: '#f5f5f7',
   },
   viewButton: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#000000',
     flex: 1,
     justifyContent: 'center',
   },
   reportActionText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#86868b',
   },
 });

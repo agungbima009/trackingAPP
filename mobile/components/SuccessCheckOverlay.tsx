@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,54 +34,67 @@ export default function SuccessCheckOverlay({
   const translateY = useSharedValue(height);
   const checkScale = useSharedValue(0);
   const glowOpacity = useSharedValue(0);
+  const textOpacity = useSharedValue(0);
+  const textTranslateY = useSharedValue(10);
 
   useEffect(() => {
     if (visible) {
-      // Background fade in
-      opacity.value = withTiming(1, { duration: 300 });
+      // Background fade in - more subtle
+      opacity.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
       
-      // Move from bottom to center with smooth easing
+      // Move from bottom to center with refined easing
       translateY.value = withSpring(0, {
-        damping: 15,
-        stiffness: 100,
+        damping: 18,
+        stiffness: 120,
       });
       
-      // Scale up the container
+      // Scale up the container - more refined
       scale.value = withSequence(
-        withSpring(1.2, { damping: 8 }),
-        withSpring(1, { damping: 10 })
+        withSpring(1.1, { damping: 10 }),
+        withSpring(1, { damping: 12 })
       );
       
-      // Glow effect
+      // Subtle glow effect
       glowOpacity.value = withSequence(
-        withDelay(200, withTiming(0.8, { duration: 300 })),
-        withTiming(0, { duration: 500 })
+        withDelay(150, withTiming(0.6, { duration: 250 })),
+        withTiming(0, { duration: 400 })
       );
       
-      // Check icon scale with bounce
+      // Check icon scale with subtle bounce
       checkScale.value = withDelay(
-        300,
-        withSpring(1, { damping: 6, stiffness: 100 })
+        250,
+        withSpring(1, { damping: 8, stiffness: 120 })
       );
       
-      // Draw checkmark
+      // Draw checkmark smoothly
       progress.value = withDelay(
-        400,
+        350,
         withTiming(1, { 
-          duration: 700,
+          duration: 600,
           easing: Easing.out(Easing.cubic),
         })
       );
 
+      // Fade in success text with subtle slide up
+      textOpacity.value = withDelay(
+        700,
+        withTiming(1, { duration: 300 })
+      );
+      textTranslateY.value = withDelay(
+        700,
+        withSpring(0, { damping: 12, stiffness: 100 })
+      );
+
       const timeout = setTimeout(() => {
-        // Exit animation
-        scale.value = withSpring(0.8, { damping: 10 });
-        opacity.value = withTiming(0, { duration: 400 }, (finished) => {
+        // Exit animation - more subtle
+        scale.value = withSpring(0.9, { damping: 12 });
+        textOpacity.value = withTiming(0, { duration: 250 });
+        opacity.value = withTiming(0, { duration: 350 }, (finished) => {
           if (finished) {
             runOnJS(onFinish)();
           }
         });
-      }, 2000);
+      }, 1800);
 
       return () => clearTimeout(timeout);
     } else {
@@ -91,6 +104,8 @@ export default function SuccessCheckOverlay({
       translateY.value = height;
       checkScale.value = 0;
       glowOpacity.value = 0;
+      textOpacity.value = 0;
+      textTranslateY.value = 10;
     }
   }, [visible, onFinish]);
 
@@ -113,6 +128,11 @@ export default function SuccessCheckOverlay({
     transform: [{ scale: checkScale.value }],
   }));
 
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+    transform: [{ translateY: textTranslateY.value }],
+  }));
+
   // Use useAnimatedProps for SVG props
   const checkProps = useAnimatedProps(() => ({
     strokeDashoffset: CHECK_LENGTH * (1 - progress.value),
@@ -121,35 +141,35 @@ export default function SuccessCheckOverlay({
   return (
     <Animated.View style={[styles.overlay, containerStyle]} pointerEvents="none">
       <Animated.View style={[styles.box, circleStyle]}>
-        {/* Glow Effect */}
+        {/* Subtle Glow Effect */}
         <Animated.View style={[styles.glow, glowStyle]} />
         
         <Animated.View style={checkIconStyle}>
-          <Svg width={140} height={140}>
-            {/* Background Circle */}
+          <Svg width={120} height={120}>
+            {/* Background Circle - Subtle */}
             <Circle
-              cx="70"
-              cy="70"
-              r="65"
-              fill="#10B981"
-              opacity="0.1"
+              cx="60"
+              cy="60"
+              r="55"
+              fill="#1d1d1f"
+              opacity="0.05"
             />
             
-            {/* Main Circle */}
+            {/* Main Circle - Minimalist Black */}
             <Circle
-              cx="70"
-              cy="70"
-              r="60"
-              stroke="#10B981"
-              strokeWidth="8"
+              cx="60"
+              cy="60"
+              r="50"
+              stroke="#1d1d1f"
+              strokeWidth="4"
               fill="#FFFFFF"
             />
 
-            {/* Checkmark */}
+            {/* Refined Checkmark */}
             <AnimatedPath
-              d="M40 72 L60 92 L100 48"
-              stroke="#10B981"
-              strokeWidth="8"
+              d="M35 62 L52 79 L87 42"
+              stroke="#1d1d1f"
+              strokeWidth="5"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -158,6 +178,11 @@ export default function SuccessCheckOverlay({
             />
           </Svg>
         </Animated.View>
+        
+        {/* Success Text */}
+        <Animated.Text style={[styles.successText, textStyle]}>
+          Success
+        </Animated.Text>
       </Animated.View>
     </Animated.View>
   );
@@ -166,7 +191,7 @@ export default function SuccessCheckOverlay({
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
@@ -175,13 +200,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
   },
   glow: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: '#10B981',
-    opacity: 0.3,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: '#1d1d1f',
+    opacity: 0.2,
+  },
+  successText: {
+    marginTop: 24,
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

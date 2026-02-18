@@ -205,11 +205,11 @@ export default function ReportDetailScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#1F2937" />
+          <IconSymbol name="chevron.left" size={20} color="#1d1d1f" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detail Laporan</Text>
         <TouchableOpacity style={styles.moreButton}>
-          <IconSymbol name="ellipsis" size={24} color="#1F2937" />
+          <IconSymbol name="ellipsis" size={20} color="#1d1d1f" />
         </TouchableOpacity>
       </View>
 
@@ -235,17 +235,17 @@ export default function ReportDetailScreen() {
 
             <View style={styles.reportMeta}>
               <View style={styles.reportMetaItem}>
-                <IconSymbol size={16} name="calendar" color="#6B7280" />
+                <IconSymbol size={14} name="calendar" color="#86868b" />
                 <Text style={styles.reportMetaText}>{report.date}</Text>
               </View>
               <View style={styles.reportMetaItem}>
-                <IconSymbol size={16} name="clock.fill" color="#6B7280" />
+                <IconSymbol size={14} name="clock.fill" color="#86868b" />
                 <Text style={styles.reportMetaText}>
                   {report.startTime} - {report.endTime} ({report.duration})
                 </Text>
               </View>
               <View style={styles.reportMetaItem}>
-                <IconSymbol size={16} name="list.bullet" color="#6B7280" />
+                <IconSymbol size={14} name="list.bullet" color="#86868b" />
                 <Text style={styles.reportMetaText}>Task: {report.taskId}</Text>
               </View>
             </View>
@@ -267,7 +267,7 @@ export default function ReportDetailScreen() {
               style={styles.editButton}
             >
               <IconSymbol 
-                size={16} 
+                size={14} 
                 name={isEditingDescription ? "checkmark" : "pencil"} 
                 color="#FFFFFF" 
               />
@@ -306,7 +306,7 @@ export default function ReportDetailScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Foto Dokumentasi</Text>
             <View style={styles.photoCountBadge}>
-              <IconSymbol size={14} name="photo.fill" color="#3B82F6" />
+              <IconSymbol size={12} name="photo.fill" color="#1d1d1f" />
               <Text style={styles.photoCountText}>{photos.length} Foto</Text>
             </View>
           </View>
@@ -318,7 +318,7 @@ export default function ReportDetailScreen() {
               onPress={() => setShowPhotoOptions(true)}
             >
               <View style={styles.uploadPhotoPlaceholder}>
-                <IconSymbol size={32} name="plus" color="#3B82F6" />
+                <IconSymbol size={28} name="plus" color="#1d1d1f" />
                 <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
               </View>
             </TouchableOpacity>
@@ -337,7 +337,7 @@ export default function ReportDetailScreen() {
                       style={styles.photoDeleteButton}
                       onPress={() => handleRemovePhoto(photo.id)}
                     >
-                      <IconSymbol size={16} name="xmark" color="#FFFFFF" />
+                      <IconSymbol size={14} name="xmark" color="#FFFFFF" />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -348,7 +348,7 @@ export default function ReportDetailScreen() {
                   onPress={() => setShowPhotoOptions(true)}
                 >
                   <View style={styles.uploadPhotoPlaceholder}>
-                    <IconSymbol size={32} name="plus" color="#3B82F6" />
+                    <IconSymbol size={28} name="plus" color="#1d1d1f" />
                     <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
                   </View>
                 </TouchableOpacity>
@@ -362,7 +362,7 @@ export default function ReportDetailScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Riwayat Lokasi</Text>
             <View style={styles.locationCountBadge}>
-              <IconSymbol size={14} name="location.fill" color="#10B981" />
+              <IconSymbol size={12} name="location.fill" color="#1d1d1f" />
               <Text style={styles.locationCountText}>{locationHistory.length} Lokasi</Text>
             </View>
           </View>
@@ -370,21 +370,21 @@ export default function ReportDetailScreen() {
           {/* Summary Stats */}
           <View style={styles.locationStatsCard}>
             <View style={styles.locationStat}>
-              <IconSymbol size={20} name="mappin.circle.fill" color="#3B82F6" />
+              <IconSymbol size={18} name="mappin.circle.fill" color="#1d1d1f" />
               <Text style={styles.locationStatValue}>{locationHistory.length}</Text>
-              <Text style={styles.locationStatLabel}>Lokasi Dikunjungi</Text>
+              <Text style={styles.locationStatLabel}>Dikunjungi</Text>
             </View>
             <View style={styles.locationStatDivider} />
             <View style={styles.locationStat}>
-              <IconSymbol size={20} name="clock.fill" color="#10B981" />
+              <IconSymbol size={18} name="clock.fill" color="#1d1d1f" />
               <Text style={styles.locationStatValue}>{report.duration}</Text>
-              <Text style={styles.locationStatLabel}>Total Durasi</Text>
+              <Text style={styles.locationStatLabel}>Durasi</Text>
             </View>
             <View style={styles.locationStatDivider} />
             <View style={styles.locationStat}>
-              <IconSymbol size={20} name="figure.walk" color="#F59E0B" />
+              <IconSymbol size={18} name="figure.walk" color="#1d1d1f" />
               <Text style={styles.locationStatValue}>0.8</Text>
-              <Text style={styles.locationStatLabel}>KM Jarak</Text>
+              <Text style={styles.locationStatLabel}>KM</Text>
             </View>
           </View>
 
@@ -414,7 +414,7 @@ export default function ReportDetailScreen() {
                 <View style={styles.timelineCard}>
                   <Text style={styles.timelineLocation}>{location.location}</Text>
                   <View style={styles.timelineCoords}>
-                    <IconSymbol size={12} name="ruler" color="#9CA3AF" />
+                    <IconSymbol size={11} name="ruler" color="#86868b" />
                     <Text style={styles.timelineCoordsText}>{location.coordinates}</Text>
                   </View>
                   {location.notes && (
@@ -430,17 +430,17 @@ export default function ReportDetailScreen() {
         <View style={styles.section}>
           <View style={styles.actionsCard}>
             <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={20} name="square.and.arrow.up" color="#3B82F6" />
+              <IconSymbol size={18} name="square.and.arrow.up" color="#1d1d1f" />
               <Text style={styles.actionButtonText}>Share Laporan</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={20} name="doc.on.doc" color="#3B82F6" />
+              <IconSymbol size={18} name="doc.on.doc" color="#1d1d1f" />
               <Text style={styles.actionButtonText}>Duplikat</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={20} name="square.and.arrow.down" color="#3B82F6" />
+              <IconSymbol size={18} name="square.and.arrow.down" color="#1d1d1f" />
               <Text style={styles.actionButtonText}>Export PDF</Text>
             </TouchableOpacity>
           </View>
@@ -462,7 +462,7 @@ export default function ReportDetailScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Tambah Foto</Text>
                 <TouchableOpacity onPress={() => setShowPhotoOptions(false)}>
-                  <IconSymbol size={24} name="xmark" color="#1F2937" />
+                  <IconSymbol size={20} name="xmark" color="#1d1d1f" />
                 </TouchableOpacity>
               </View>
 
@@ -472,13 +472,13 @@ export default function ReportDetailScreen() {
                   onPress={handleCameraPhoto}
                 >
                   <View style={styles.modalOptionIcon}>
-                    <IconSymbol size={32} name="camera.fill" color="#3B82F6" />
+                    <IconSymbol size={28} name="camera.fill" color="#1d1d1f" />
                   </View>
                   <View style={styles.modalOptionText}>
                     <Text style={styles.modalOptionTitle}>Ambil Foto Kamera</Text>
                     <Text style={styles.modalOptionDesc}>Ambil foto menggunakan kamera perangkat</Text>
                   </View>
-                  <IconSymbol size={20} name="chevron.right" color="#D1D5DB" />
+                  <IconSymbol size={18} name="chevron.right" color="#86868b" />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -486,13 +486,13 @@ export default function ReportDetailScreen() {
                   onPress={handleGalleryPhoto}
                 >
                   <View style={styles.modalOptionIcon}>
-                    <IconSymbol size={32} name="photo.on.rectangle" color="#10B981" />
+                    <IconSymbol size={28} name="photo.on.rectangle" color="#1d1d1f" />
                   </View>
                   <View style={styles.modalOptionText}>
                     <Text style={styles.modalOptionTitle}>Pilih dari Galeri</Text>
                     <Text style={styles.modalOptionDesc}>Pilih foto dari galeri perangkat</Text>
                   </View>
-                  <IconSymbol size={20} name="chevron.right" color="#D1D5DB" />
+                  <IconSymbol size={18} name="chevron.right" color="#86868b" />
                 </TouchableOpacity>
               </View>
 
@@ -514,36 +514,37 @@ export default function ReportDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f7',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#e5e5ea',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
+    letterSpacing: -0.3,
   },
   moreButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -552,134 +553,143 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
     marginBottom: 12,
+    letterSpacing: -0.2,
   },
   reportCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   reportHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   reportHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   reportId: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#86868b',
   },
   reportTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 16,
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    marginBottom: 12,
   },
   reportMeta: {
-    gap: 12,
+    gap: 8,
   },
   reportMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   reportMetaText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 13,
+    color: '#86868b',
   },
   descriptionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   descriptionEditCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   descriptionInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 10,
+    borderColor: '#d2d2d7',
+    borderRadius: 6,
     padding: 12,
-    fontSize: 15,
-    color: '#1F2937',
+    fontSize: 14,
+    color: '#1d1d1f',
     minHeight: 120,
     textAlignVertical: 'top',
     marginBottom: 12,
   },
   descriptionText: {
-    fontSize: 15,
-    color: '#4B5563',
-    lineHeight: 24,
+    fontSize: 14,
+    color: '#86868b',
+    lineHeight: 22,
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    gap: 4,
+    backgroundColor: '#000000',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
   },
   editButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
     color: '#FFFFFF',
   },
   cancelButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 4,
+    backgroundColor: '#f5f5f7',
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#86868b',
   },
   photoCountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#f5f5f7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   photoCountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3B82F6',
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1d1d1f',
   },
   photosGrid: {
     flexDirection: 'row',
@@ -698,27 +708,27 @@ const styles = StyleSheet.create({
   },
   uploadPhotoPlaceholder: {
     flex: 1,
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: '#3B82F6',
+    borderColor: '#1d1d1f',
     borderStyle: 'dashed',
     borderRadius: 12,
   },
   uploadPhotoText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3B82F6',
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1d1d1f',
   },
   photoDeleteButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
@@ -727,59 +737,64 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#f5f5f7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   locationCountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1d1d1f',
   },
   locationStatsCard: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   locationStat: {
     flex: 1,
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   locationStatValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#1d1d1f',
   },
   locationStatLabel: {
-    fontSize: 11,
-    color: '#6B7280',
+    fontSize: 10,
+    color: '#86868b',
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    fontWeight: '500',
   },
   locationStatDivider: {
     width: 1,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 8,
+    backgroundColor: '#e5e5ea',
+    marginHorizontal: 6,
   },
   locationTimeline: {
     gap: 0,
   },
   timelineItem: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 12,
   },
   timelineLeft: {
     alignItems: 'center',
     width: 60,
   },
   timelineTime: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#86868b',
     marginBottom: 8,
   },
   timelineDotContainer: {
@@ -787,10 +802,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   timelineDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#3B82F6',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1d1d1f',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
@@ -801,7 +816,7 @@ const styles = StyleSheet.create({
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#e5e5ea',
     marginTop: 4,
     minHeight: 40,
   },
@@ -809,51 +824,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   timelineLocation: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
     marginBottom: 6,
   },
   timelineCoords: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
+    gap: 4,
+    marginBottom: 6,
   },
   timelineCoordsText: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: 11,
+    color: '#86868b',
     fontFamily: 'monospace',
   },
   timelineNotes: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 20,
-    paddingTop: 8,
+    fontSize: 12,
+    color: '#86868b',
+    lineHeight: 18,
+    paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#e5e5ea',
   },
   actionsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    gap: 10,
+    padding: 10,
+    borderRadius: 6,
+    backgroundColor: '#f5f5f7',
   },
   actionButtonText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#3B82F6',
+    color: '#1d1d1f',
   },
   modalContainer: {
     flex: 1,
@@ -865,8 +884,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 20,
@@ -875,31 +894,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1d1d1f',
   },
   modalOptions: {
-    gap: 12,
+    gap: 10,
     marginBottom: 16,
   },
   modalOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 16,
+    gap: 12,
+    paddingVertical: 14,
     paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    backgroundColor: '#f5f5f7',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   modalOptionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#DBEAFE',
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -907,25 +928,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalOptionTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
+    color: '#1d1d1f',
+    marginBottom: 2,
   },
   modalOptionDesc: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 12,
+    color: '#86868b',
   },
   modalCancelButton: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 6,
+    backgroundColor: '#f5f5f7',
     alignItems: 'center',
   },
   modalCancelButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#86868b',
   },
 });

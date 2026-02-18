@@ -11,25 +11,22 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: '#000000',
+        tabBarInactiveTintColor: '#86868b',
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          borderTopColor: '#e5e5ea',
           height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom || 28 : insets.bottom || 8,
           paddingTop: 8,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
+          elevation: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '500',
+          letterSpacing: 0.3,
         },
       }}
     >
@@ -39,7 +36,7 @@ export default function TabLayout() {
           title: 'Beranda',
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol 
-              size={24} 
+              size={22} 
               name={focused ? 'house.fill' : 'house'} 
               color={color} 
             />
@@ -52,7 +49,7 @@ export default function TabLayout() {
           title: 'Laporan',
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol 
-              size={24} 
+              size={22} 
               name={focused ? 'doc.text.fill' : 'doc.text'} 
               color={color} 
             />
@@ -65,7 +62,7 @@ export default function TabLayout() {
           title: 'Profil',
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol 
-              size={24} 
+              size={22} 
               name={focused ? 'person.fill' : 'person'} 
               color={color} 
             />

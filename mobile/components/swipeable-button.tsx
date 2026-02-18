@@ -23,8 +23,8 @@ export function SwipeableButton({
   onSwipeComplete,
   disabled = false,
 }: SwipeableButtonProps) {
-  const SLIDER_SIZE = 60;
-  const MARGIN = 5;
+  const SLIDER_SIZE = 54;
+  const MARGIN = 4;
 
   const translateX = useSharedValue(0);
   const trackWidth = useSharedValue(0);
@@ -105,7 +105,7 @@ export function SwipeableButton({
 
       <Animated.View style={[styles.textContainer, textStyle]}>
         <Text style={styles.text}>
-          Swipe to Start Tracking
+          SWIPE TO START TRACKING
         </Text>
       </Animated.View>
 
@@ -120,11 +120,13 @@ export function SwipeableButton({
 
 const styles = StyleSheet.create({
   container: {
-    height: 70,
-    backgroundColor: '#1F2937',
-    borderRadius: 40,
+    height: 62,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     justifyContent: 'center',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   fill: {
     position: 'absolute',
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: '100%',
-    backgroundColor: '#10B981',
+    backgroundColor: '#000000',
     transformOrigin: 'left',
   },
   textContainer: {
@@ -141,24 +143,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#86868b',
+    letterSpacing: 0.5,
   },
   slider: {
     position: 'absolute',
-    left: 5,
-    top: 5,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3B82F6',
+    left: 4,
+    top: 4,
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
   arrow: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
   },
 });

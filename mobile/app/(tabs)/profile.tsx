@@ -95,15 +95,15 @@ export default function ProfileScreen() {
         <View key={item.label} style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <View style={styles.menuIcon}>
-              <IconSymbol size={20} name={item.icon} color="#6B7280" />
+              <IconSymbol size={18} name={item.icon} color="#86868b" />
             </View>
             <Text style={styles.menuLabel}>{item.label}</Text>
           </View>
           <Switch
             value={item.value}
             onValueChange={item.onToggle}
-            trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
-            thumbColor={item.value ? '#3B82F6' : '#F3F4F6'}
+            trackColor={{ false: '#e5e5ea', true: '#1d1d1f' }}
+            thumbColor={item.value ? '#FFFFFF' : '#f5f5f7'}
           />
         </View>
       );
@@ -113,13 +113,13 @@ export default function ProfileScreen() {
       <TouchableOpacity key={item.label} style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <View style={styles.menuIcon}>
-            <IconSymbol size={20} name={item.icon} color="#6B7280" />
+            <IconSymbol size={18} name={item.icon} color="#86868b" />
           </View>
           <Text style={styles.menuLabel}>{item.label}</Text>
         </View>
         <View style={styles.menuItemRight}>
           {item.value && <Text style={styles.menuValue}>{item.value}</Text>}
-          <IconSymbol size={20} name="chevron.right" color="#9CA3AF" />
+          <IconSymbol size={18} name="chevron.right" color="#86868b" />
         </View>
       </TouchableOpacity>
     );
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profil</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <IconSymbol size={24} name="gearshape.fill" color="#1F2937" />
+          <IconSymbol size={20} name="gearshape.fill" color="#1d1d1f" />
         </TouchableOpacity>
       </View>
 
@@ -143,7 +143,7 @@ export default function ProfileScreen() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           {isLoading ? (
-            <ActivityIndicator size="large" color="#3B82F6" style={{ marginVertical: 20 }} />
+            <ActivityIndicator size="large" color="#1d1d1f" style={{ marginVertical: 20 }} />
           ) : (
             <>
               <View style={styles.avatarContainer}>
@@ -153,7 +153,7 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.editAvatarButton}>
-                  <IconSymbol size={16} name="camera.fill" color="#FFFFFF" />
+                  <IconSymbol size={14} name="camera.fill" color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
               
@@ -162,14 +162,14 @@ export default function ProfileScreen() {
               
               {userData?.department && (
                 <View style={styles.userInfoChip}>
-                  <IconSymbol size={14} name="building.2.fill" color="#3B82F6" />
+                  <IconSymbol size={12} name="building.2.fill" color="#1d1d1f" />
                   <Text style={styles.userInfoText}>{userData.department}</Text>
                 </View>
               )}
               
               {userData?.position && (
                 <View style={styles.userInfoChip}>
-                  <IconSymbol size={14} name="briefcase.fill" color="#6B7280" />
+                  <IconSymbol size={12} name="briefcase.fill" color="#1d1d1f" />
                   <Text style={styles.userInfoText}>{userData.position}</Text>
                 </View>
               )}
@@ -189,7 +189,7 @@ export default function ProfileScreen() {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <IconSymbol size={20} name="arrow.right.square.fill" color="#EF4444" />
+          <IconSymbol size={18} name="arrow.right.square.fill" color="#EF4444" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
@@ -203,28 +203,29 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f7',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#e5e5ea',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    letterSpacing: -0.3,
   },
   headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -233,26 +234,23 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 20,
     marginHorizontal: 20,
     marginTop: 20,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#3B82F6',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#1d1d1f',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -260,82 +258,83 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#FFFFFF',
   },
   userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1d1d1f',
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
+    fontSize: 13,
+    color: '#86868b',
+    marginBottom: 16,
   },
   statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     justifyContent: 'space-around',
-    paddingTop: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#e5e5ea',
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
+    color: '#1d1d1f',
+    marginBottom: 2,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 10,
+    color: '#86868b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    fontWeight: '500',
   },
   statDivider: {
     width: 1,
-    height: 40,
-    backgroundColor: '#E5E7EB',
+    height: 36,
+    backgroundColor: '#e5e5ea',
   },
   section: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 12,
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#86868b',
+    marginBottom: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   menuContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   menuItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#e5e5ea',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -343,27 +342,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   menuLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
+    color: '#1d1d1f',
   },
   menuItemRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   menuValue: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 13,
+    color: '#86868b',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -371,42 +370,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     marginHorizontal: 20,
     marginBottom: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#e5e5ea',
   },
   logoutText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: '#EF4444',
   },
   versionText: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: 11,
+    color: '#86868b',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   avatarText: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   userInfoChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 8,
-    gap: 6,
+    backgroundColor: '#f5f5f7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    marginTop: 6,
+    gap: 4,
   },
   userInfoText: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 12,
+    color: '#86868b',
     fontWeight: '500',
   },
 });

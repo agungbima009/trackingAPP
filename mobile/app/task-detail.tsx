@@ -106,11 +106,11 @@ export default function TaskDetailScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#1F2937" />
+          <IconSymbol name="chevron.left" size={22} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detail Tugas</Text>
+        <Text style={styles.headerTitle}>DETAIL TUGAS</Text>
         <TouchableOpacity style={styles.moreButton}>
-          <IconSymbol name="ellipsis" size={24} color="#1F2937" />
+          <IconSymbol name="ellipsis" size={22} color="#1d1d1f" />
         </TouchableOpacity>
       </View>
 
@@ -132,15 +132,15 @@ export default function TaskDetailScreen() {
 
             <View style={styles.taskMeta}>
               <View style={styles.taskMetaItem}>
-                <IconSymbol name="location.fill" size={16} color="#6B7280" />
+                <IconSymbol name="location.fill" size={14} color="#86868b" />
                 <Text style={styles.taskMetaText}>{task.location}</Text>
               </View>
               <View style={styles.taskMetaItem}>
-                <IconSymbol name="clock.fill" size={16} color="#6B7280" />
+                <IconSymbol name="clock.fill" size={14} color="#86868b" />
                 <Text style={styles.taskMetaText}>Estimasi: {task.estimatedDuration}</Text>
               </View>
               <View style={styles.taskMetaItem}>
-                <IconSymbol name="person.fill" size={16} color="#6B7280" />
+                <IconSymbol name="person.fill" size={14} color="#86868b" />
                 <Text style={styles.taskMetaText}>Diberikan oleh: {task.assignedBy}</Text>
               </View>
             </View>
@@ -154,7 +154,7 @@ export default function TaskDetailScreen() {
 
         {/* Requirements */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Persyaratan</Text>
+          <Text style={styles.sectionTitle}>PERSYARATAN</Text>
           {task.requirements.map((requirement, index) => (
             <View key={index} style={styles.requirementItem}>
               <View style={styles.requirementBullet} />
@@ -165,7 +165,7 @@ export default function TaskDetailScreen() {
 
         {/* Tracking Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Status Tracking</Text>
+          <Text style={styles.sectionTitle}>STATUS TRACKING</Text>
           <View style={[styles.trackingCard, isTracking && styles.trackingCardActive]}>
             {isTracking ? (
               <>
@@ -178,26 +178,26 @@ export default function TaskDetailScreen() {
 
                 <View style={styles.trackingStats}>
                   <View style={styles.trackingStat}>
-                    <IconSymbol name="location.fill" size={20} color="#10B981" />
+                    <IconSymbol name="location.fill" size={18} color="#1d1d1f" />
                     <Text style={styles.trackingStatValue}>12</Text>
-                    <Text style={styles.trackingStatLabel}>Lokasi Terekam</Text>
+                    <Text style={styles.trackingStatLabel}>LOKASI</Text>
                   </View>
                   <View style={styles.trackingDivider} />
                   <View style={styles.trackingStat}>
-                    <IconSymbol name="clock.fill" size={20} color="#10B981" />
+                    <IconSymbol name="clock.fill" size={18} color="#1d1d1f" />
                     <Text style={styles.trackingStatValue}>1.5</Text>
-                    <Text style={styles.trackingStatLabel}>Jam Aktif</Text>
+                    <Text style={styles.trackingStatLabel}>JAM</Text>
                   </View>
                   <View style={styles.trackingDivider} />
                   <View style={styles.trackingStat}>
-                    <IconSymbol name="map.fill" size={20} color="#10B981" />
+                    <IconSymbol name="map.fill" size={18} color="#1d1d1f" />
                     <Text style={styles.trackingStatValue}>2.3</Text>
-                    <Text style={styles.trackingStatLabel}>KM Jarak</Text>
+                    <Text style={styles.trackingStatLabel}>KM</Text>
                   </View>
                 </View>
 
                 <View style={styles.currentLocation}>
-                  <IconSymbol name="location.fill" size={16} color="#10B981" />
+                  <IconSymbol name="location.fill" size={14} color="#1d1d1f" />
                   <Text style={styles.currentLocationText}>
                     Gedung Utama, Lantai 3 - Ruang Server
                   </Text>
@@ -205,7 +205,7 @@ export default function TaskDetailScreen() {
               </>
             ) : (
               <View style={styles.trackingInactive}>
-                <IconSymbol name="location.slash.fill" size={48} color="#9CA3AF" />
+                <IconSymbol name="location.slash.fill" size={44} color="#86868b" />
                 <Text style={styles.trackingInactiveTitle}>Tracking Belum Dimulai</Text>
                 <Text style={styles.trackingInactiveText}>
                   Mulai tracking untuk merekam lokasi Anda selama mengerjakan tugas ini
@@ -227,14 +227,14 @@ export default function TaskDetailScreen() {
                 style={[styles.secondaryButton, { flex: 1 }]}
                 onPress={handleStopTracking}
               >
-                <IconSymbol name="stop.fill" size={20} color="#EF4444" />
+                <IconSymbol name="stop.fill" size={18} color="#EF4444" />
                 <Text style={styles.secondaryButtonText}>Hentikan</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.primaryButton, { flex: 1 }]}
                 onPress={handleCreateReport}
               >
-                <IconSymbol name="camera.fill" size={20} color="#FFFFFF" />
+                <IconSymbol name="camera.fill" size={18} color="#FFFFFF" />
                 <Text style={styles.primaryButtonText}>Buat Laporan</Text>
               </TouchableOpacity>
             </View>
@@ -244,7 +244,7 @@ export default function TaskDetailScreen() {
         {/* Location History */}
         {isTracking && locationHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Riwayat Lokasi</Text>
+            <Text style={styles.sectionTitle}>RIWAYAT LOKASI</Text>
             <View style={styles.locationHistory}>
               {locationHistory.map((location, index) => (
                 <View key={location.id} style={styles.locationItem}>
@@ -274,7 +274,7 @@ export default function TaskDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f7',
   },
   header: {
     flexDirection: 'row',
@@ -284,26 +284,31 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#e5e5ea',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
+    letterSpacing: 0.5,
   },
   moreButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -315,15 +320,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#86868b',
     marginBottom: 12,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   taskCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   taskHeader: {
     flexDirection: 'row',
@@ -339,28 +348,29 @@ const styles = StyleSheet.create({
   priorityBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 6,
   },
   priorityBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   taskId: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#86868b',
   },
   taskTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#1d1d1f',
     marginBottom: 8,
   },
   taskDescription: {
-    fontSize: 15,
-    color: '#6B7280',
-    lineHeight: 22,
+    fontSize: 14,
+    color: '#86868b',
+    lineHeight: 20,
     marginBottom: 16,
   },
   taskMeta: {
@@ -373,8 +383,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   taskMetaText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 13,
+    color: '#86868b',
   },
   deadlineAlert: {
     flexDirection: 'row',
@@ -383,7 +393,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   deadlineAlertText: {
     fontSize: 14,
@@ -396,28 +406,33 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#FFFFFF',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   requirementBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#3B82F6',
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#1d1d1f',
     marginTop: 6,
   },
   requirementText: {
     flex: 1,
-    fontSize: 14,
-    color: '#4B5563',
+    fontSize: 13,
+    color: '#1d1d1f',
     lineHeight: 20,
   },
   trackingCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   trackingCardActive: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#000000',
   },
   trackingHeader: {
     alignItems: 'center',
@@ -427,21 +442,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: '#000000',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   pulseIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#10B981',
   },
   trackingStatusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: '#10B981',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   trackingStats: {
     flexDirection: 'row',
@@ -454,48 +470,51 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   trackingStatValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#10B981',
+    color: '#1d1d1f',
   },
   trackingStatLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
+    fontSize: 10,
+    color: '#86868b',
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   trackingDivider: {
     width: 1,
-    backgroundColor: '#374151',
+    backgroundColor: '#e5e5ea',
     marginHorizontal: 8,
   },
   currentLocation: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: '#f5f5f7',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   currentLocationText: {
     flex: 1,
-    fontSize: 13,
-    color: '#D1D5DB',
+    fontSize: 12,
+    color: '#1d1d1f',
   },
   trackingInactive: {
     alignItems: 'center',
     paddingVertical: 20,
   },
   trackingInactiveTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#1d1d1f',
     marginTop: 12,
     marginBottom: 4,
   },
   trackingInactiveText: {
-    fontSize: 14,
-    color: '#9CA3AF',
+    fontSize: 13,
+    color: '#86868b',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -506,24 +525,21 @@ const styles = StyleSheet.create({
   liveTrackingButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
-    borderRadius: 40,
+    backgroundColor: '#000000',
+    borderRadius: 12,
     overflow: 'hidden',
-    height: 70,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#1d1d1f',
   },
   trackingButtonIconSection: {
-    backgroundColor: '#3B82F6',
-    width: 90,
-    height: 70,
+    backgroundColor: '#1d1d1f',
+    width: 80,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopLeftRadius: 40,
-    borderBottomLeftRadius: 40,
+    borderTopLeftRadius: 11,
+    borderBottomLeftRadius: 11,
   },
   trackingButtonTextSection: {
     flex: 1,
@@ -532,7 +548,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   trackingButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
@@ -542,12 +558,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: '#000000',
+    paddingVertical: 14,
+    borderRadius: 8,
   },
   primaryButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -557,13 +573,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: '#FFFFFF',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#EF4444',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 8,
   },
   secondaryButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#EF4444',
   },
@@ -579,44 +595,46 @@ const styles = StyleSheet.create({
     width: 60,
   },
   locationTime: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#86868b',
     marginBottom: 8,
   },
   locationLine: {
-    width: 2,
+    width: 1,
     flex: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#e5e5ea',
     minHeight: 40,
   },
   locationCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 12,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   locationDot: {
     position: 'absolute',
     left: -24,
     top: 16,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#3B82F6',
-    borderWidth: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#1d1d1f',
+    borderWidth: 2,
     borderColor: '#FFFFFF',
   },
   locationAddress: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#1F2937',
+    color: '#1d1d1f',
     marginBottom: 4,
   },
   locationCoords: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: 11,
+    color: '#86868b',
   },
 });

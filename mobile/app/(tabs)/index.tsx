@@ -123,7 +123,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.avatar}>
-            <IconSymbol size={28} name="person.fill" color="#FFFFFF" />
+            <IconSymbol size={24} name="person.fill" color="#FFFFFF" />
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={styles.greeting}>{getGreeting()}</Text>
@@ -133,7 +133,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
-          <IconSymbol size={24} name="bell.fill" color="#1F2937" />
+          <IconSymbol size={20} name="bell.fill" color="#1d1d1f" />
           <View style={styles.notificationBadge} />
         </TouchableOpacity>
       </View>
@@ -147,17 +147,17 @@ export default function HomeScreen() {
         {/* Quick Stats */}
         <View style={styles.section}>
           <View style={styles.quickStatsRow}>
-            <View style={[styles.quickStatCard, { backgroundColor: '#3B82F6' }]}>
+            <View style={styles.quickStatCard}>
               <Text style={styles.quickStatValue}>{todayStats.available}</Text>
-              <Text style={styles.quickStatLabel}>Tugas Tersedia</Text>
+              <Text style={styles.quickStatLabel}>Tersedia</Text>
             </View>
-            <View style={[styles.quickStatCard, { backgroundColor: '#F59E0B' }]}>
+            <View style={styles.quickStatCard}>
               <Text style={styles.quickStatValue}>{todayStats.inProgress}</Text>
-              <Text style={styles.quickStatLabel}>Sedang Dikerjakan</Text>
+              <Text style={styles.quickStatLabel}>Aktif</Text>
             </View>
-            <View style={[styles.quickStatCard, { backgroundColor: '#10B981' }]}>
+            <View style={styles.quickStatCard}>
               <Text style={styles.quickStatValue}>{todayStats.completed}</Text>
-              <Text style={styles.quickStatLabel}>Selesai Hari Ini</Text>
+              <Text style={styles.quickStatLabel}>Selesai</Text>
             </View>
           </View>
         </View>
@@ -180,11 +180,11 @@ export default function HomeScreen() {
 
               <View style={styles.activeTaskInfo}>
                 <View style={styles.activeTaskInfoItem}>
-                  <IconSymbol size={16} name="location.fill" color="#6B7280" />
+                  <IconSymbol size={16} name="location.fill" color="#86868b" />
                   <Text style={styles.activeTaskInfoText}>{activeTask.location}</Text>
                 </View>
                 <View style={styles.activeTaskInfoItem}>
-                  <IconSymbol size={16} name="clock.fill" color="#6B7280" />
+                  <IconSymbol size={16} name="clock.fill" color="#86868b" />
                   <Text style={styles.activeTaskInfoText}>
                     Mulai {activeTask.startTime} • {activeTask.duration}
                   </Text>
@@ -196,7 +196,7 @@ export default function HomeScreen() {
                   style={styles.activeTaskButton}
                   onPress={() => router.push(`/task-detail?taskId=${activeTask.id}`)}
                 >
-                  <IconSymbol size={20} name="eye.fill" color="#3B82F6" />
+                  <IconSymbol size={16} name="eye.fill" color="#FFFFFF" />
                   <Text style={styles.activeTaskButtonText}>Lihat Detail</Text>
                 </TouchableOpacity>
               </View>
@@ -209,7 +209,7 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tugas Tersedia</Text>
             <TouchableOpacity style={styles.filterButton}>
-              <IconSymbol size={20} name="line.3.horizontal.decrease.circle" color="#3B82F6" />
+              <IconSymbol size={18} name="line.3.horizontal.decrease.circle" color="#1d1d1f" />
             </TouchableOpacity>
           </View>
 
@@ -263,13 +263,13 @@ export default function HomeScreen() {
 
                 <View style={styles.taskMeta}>
                   <View style={styles.taskMetaItem}>
-                    <IconSymbol size={14} name="location.fill" color="#6B7280" />
+                    <IconSymbol size={14} name="location.fill" color="#86868b" />
                     <Text style={styles.taskMetaText} numberOfLines={1}>
                       {task.location}
                     </Text>
                   </View>
                   <View style={styles.taskMetaItem}>
-                    <IconSymbol size={14} name="clock.fill" color="#6B7280" />
+                    <IconSymbol size={14} name="clock.fill" color="#86868b" />
                     <Text style={styles.taskMetaText}>{task.estimatedTime}</Text>
                   </View>
                 </View>
@@ -284,7 +284,7 @@ export default function HomeScreen() {
                     onPress={() => router.push(`/task-detail?taskId=${task.id}`)}
                   >
                     <Text style={styles.takeTaskButtonText}>Ambil Tugas</Text>
-                    <IconSymbol size={16} name="arrow.right.circle.fill" color="#FFFFFF" />
+                    <IconSymbol size={14} name="arrow.right.circle.fill" color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -299,25 +299,27 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f7',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5ea',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#3B82F6',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1d1d1f',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -325,19 +327,22 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   greeting: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 11,
+    color: '#86868b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '500',
   },
   userName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1d1d1f',
   },
   notificationButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f7',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -365,10 +370,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 16,
+    color: '#1d1d1f',
+    marginBottom: 12,
+    letterSpacing: -0.3,
   },
   quickStatsRow: {
     flexDirection: 'row',
@@ -377,60 +383,69 @@ const styles = StyleSheet.create({
   quickStatCard: {
     flex: 1,
     borderRadius: 12,
-    padding: 16,
+    padding: 18,
     alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   quickStatValue: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 4,
   },
   quickStatLabel: {
     fontSize: 11,
-    color: '#FFFFFF',
+    color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    opacity: 0.9,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '500',
   },
   activeTaskCard: {
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   activeTaskHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   activeTaskBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    backgroundColor: '#f5f5f7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
   },
   pulseIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#10B981',
   },
   activeTaskBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   activeTaskId: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#86868b',
   },
   activeTaskTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1d1d1f',
     marginBottom: 12,
   },
   activeTaskInfo: {
@@ -440,11 +455,11 @@ const styles = StyleSheet.create({
   activeTaskInfoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   activeTaskInfoText: {
-    fontSize: 14,
-    color: '#D1D5DB',
+    fontSize: 13,
+    color: '#86868b',
   },
   activeTaskActions: {
     flexDirection: 'row',
@@ -454,15 +469,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
+    backgroundColor: '#000000',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 4,
   },
   activeTaskButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3B82F6',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   filterButton: {
     padding: 8,
@@ -477,21 +492,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 4,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#d2d2d7',
   },
   filterTabActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: '#000000',
+    borderColor: '#000000',
   },
   filterTabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#86868b',
   },
   filterTabTextActive: {
     color: '#FFFFFF',
@@ -502,8 +517,10 @@ const styles = StyleSheet.create({
   },
   taskCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
   },
   taskHeader: {
     flexDirection: 'row',
@@ -517,30 +534,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   priorityBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   priorityBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   taskId: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#86868b',
   },
   taskTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: '#1d1d1f',
+    marginBottom: 6,
   },
   taskDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+    fontSize: 13,
+    color: '#86868b',
+    lineHeight: 19,
     marginBottom: 12,
   },
   taskMeta: {
@@ -554,7 +573,7 @@ const styles = StyleSheet.create({
   },
   taskMetaText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: '#86868b',
     flex: 1,
   },
   taskFooter: {
@@ -563,7 +582,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#e5e5ea',
   },
   deadlineContainer: {
     flexDirection: 'row',
@@ -578,15 +597,15 @@ const styles = StyleSheet.create({
   takeTaskButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    gap: 4,
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
   },
   takeTaskButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
     color: '#FFFFFF',
   },
 });
