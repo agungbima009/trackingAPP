@@ -12,19 +12,19 @@
 // export const API_BASE_URL = 'http://localhost:8000/api';
 
 // 3. Physical Device (LOCAL DEVELOPMENT)
-// Machine IP: 10.109.64.43
-export const API_BASE_URL = 'http://10.109.64.43:8000/api';
+// UPDATED: Get your current IP by running: php artisan serve:urls
+export const API_BASE_URL = 'http://172.16.100.232:8000/api';
 
 // 4. Production
 // export const API_BASE_URL = 'https://your-production-domain.com/api';
 
 /**
- * Cara menggunakan:
+ * Cara mendapatkan IP yang benar:
  * 
- * 1. Buka PowerShell di folder project root
- * 2. Jalankan: powershell -ExecutionPolicy Bypass -File CHECK_IP_CONFIG.ps1
- * 3. Dapatkan IP address dari output
- * 4. Update API_BASE_URL di bawah sesuai device Anda
- * 5. Save file ini
- * 6. Expo akan auto-reload
+ * 1. Buka terminal di backend-laravel folder
+ * 2. Jalankan: php artisan serve:urls
+ * 3. Lihat "Network" address yang muncul
+ * 4. Update API_BASE_URL di atas dengan IP tersebut
+ * 5. Pastikan port sama dengan yang ditampilkan (default: 8000)
+ * 6. Save file ini dan reload Expo app
  */

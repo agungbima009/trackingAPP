@@ -149,31 +149,37 @@ export default function LoginScreen() {
 
     // Validasi email format
     if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
 
-    // Validasi password sebelum login
-    if (!validatePassword(password)) {
-      return;
-    }
+    // Don't validate password complexity on login - only check if it's not empty
 
     setIsLoading(true);
     try {
-      // Test connection first
-      const isConnected = await testAPIConnection();
-      if (!isConnected) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Call actual login API
+      console.log(`Attempting login to ${API_BASE_URL}`);
+      
+      // Call actual login API (no connection test, let the login request handle errors)
       const response = await authAPI.login(email, password);
+      
+      console.log('Login successful:', response);
       
       // Navigate ke tabs
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Login error:', error);
-      const errorMessage = error.message || 'Invalid email or password';
+      
+      let errorMessage = 'Invalid email or password';
+      
+      // Handle different error types
+      if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+        errorMessage = `Cannot connect to server at ${API_BASE_URL}\n\nMake sure:\n1. Backend is running (php artisan serve:urls)\n2. You're using the correct IP address\n3. Your device and server are on the same network`;
+      } else if (error.response?.status === 422 || error.response?.status === 401) {
+        errorMessage = error.response?.data?.message || 'Invalid email or password';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
