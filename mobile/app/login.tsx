@@ -63,7 +63,7 @@ export default function LoginScreen() {
   const validateEmail = (emailStr: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let error = '';
-    
+
     if (emailStr && !emailRegex.test(emailStr)) {
       error = 'Please enter a valid email address';
     }
@@ -124,7 +124,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       console.log('Connection test failed:', error.message);
       let message = `Cannot connect to ${API_BASE_URL}\n\n`;
-      
+
       if (error.code === 'ECONNREFUSED') {
         message += 'Backend is not running. Start it with:\ncd backend-laravel\nphp artisan serve';
       } else if (error.code === 'ECONNABORTED') {
@@ -134,7 +134,7 @@ export default function LoginScreen() {
       } else {
         message += `Error: ${error.message}`;
       }
-      
+
       Alert.alert('Connection Failed', message);
       return false;
     }
@@ -158,19 +158,19 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       console.log(`Attempting login to ${API_BASE_URL}`);
-      
+
       // Call actual login API (no connection test, let the login request handle errors)
       const response = await authAPI.login(email, password);
-      
+
       console.log('Login successful:', response);
-      
+
       // Navigate ke tabs
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Login error:', error);
-      
+
       let errorMessage = 'Invalid email or password';
-      
+
       // Handle different error types
       if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
         errorMessage = `Cannot connect to server at ${API_BASE_URL}\n\nMake sure:\n1. Backend is running (php artisan serve:urls)\n2. You're using the correct IP address\n3. Your device and server are on the same network`;
@@ -179,7 +179,7 @@ export default function LoginScreen() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
@@ -223,100 +223,100 @@ export default function LoginScreen() {
 
             {/* Login Form */}
             <View style={styles.formContainer}>
-            <Text style={styles.welcomeText}>Welcome Back!</Text>
-            <Text style={styles.loginSubtext}>Sign in to continue tracking</Text>
+              <Text style={styles.welcomeText}>Welcome Back!</Text>
+              <Text style={styles.loginSubtext}>Sign in to continue tracking</Text>
 
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputWrapper, emailError && styles.inputWrapperError]}>
-                <IconSymbol size={20} name="envelope.fill" color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="you@example.com"
-                  placeholderTextColor="#9CA3AF"
-                  value={email}
-                  onChangeText={handleEmailChange}
-                  onFocus={() => handleInputFocus(200)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
-              </View>
-              {emailError && (
-                <View style={styles.errorContainer}>
-                  <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
-                  <Text style={styles.errorText}>{emailError}</Text>
+              {/* Email Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email Address</Text>
+                <View style={[styles.inputWrapper, emailError && styles.inputWrapperError]}>
+                  <IconSymbol size={20} name="envelope.fill" color="#6B7280" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="you@example.com"
+                    placeholderTextColor="#9CA3AF"
+                    value={email}
+                    onChangeText={handleEmailChange}
+                    onFocus={() => handleInputFocus(200)}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                  />
                 </View>
-              )}
-            </View>
+                {emailError && (
+                  <View style={styles.errorContainer}>
+                    <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
+                    <Text style={styles.errorText}>{emailError}</Text>
+                  </View>
+                )}
+              </View>
 
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <View style={[styles.inputWrapper, passwordError && styles.inputWrapperError]}>
-                <IconSymbol size={20} name="lock.fill" color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor="#6B7280"
-                  value={password}
-                  onChangeText={handlePasswordChange}
-                  onFocus={() => handleInputFocus(300)}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
+              {/* Password Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <View style={[styles.inputWrapper, passwordError && styles.inputWrapperError]}>
+                  <IconSymbol size={20} name="lock.fill" color="#6B7280" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#6B7280"
+                    value={password}
+                    onChangeText={handlePasswordChange}
+                    onFocus={() => handleInputFocus(300)}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                    disabled={isLoading}
+                  >
+                    <IconSymbol
+                      size={20}
+                      name={showPassword ? 'eye.fill' : 'eye'}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {passwordError && (
+                  <View style={styles.errorContainer}>
+                    <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
+                    <Text style={styles.errorText}>{passwordError}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Remember Me & Forgot Password */}
+              <View style={styles.optionsRow}>
                 <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
+                  style={styles.rememberMeContainer}
+                  onPress={() => setRememberMe(!rememberMe)}
                   disabled={isLoading}
                 >
-                  <IconSymbol
-                    size={20}
-                    name={showPassword ? 'eye.fill' : 'eye'}
-                    color="#6B7280"
-                  />
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+                    {rememberMe && <IconSymbol size={14} name="checkmark" color="#FFFFFF" />}
+                  </View>
+                  <Text style={styles.rememberMeText}>Remember me</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity disabled={isLoading}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                 </TouchableOpacity>
               </View>
-              {passwordError && (
-                <View style={styles.errorContainer}>
-                  <IconSymbol size={14} name="exclamationmark.circle.fill" color="#EF4444" />
-                  <Text style={styles.errorText}>{passwordError}</Text>
-                </View>
-              )}
-            </View>
 
-            {/* Remember Me & Forgot Password */}
-            <View style={styles.optionsRow}>
+              {/* Login Button */}
               <TouchableOpacity
-                style={styles.rememberMeContainer}
-                onPress={() => setRememberMe(!rememberMe)}
+                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                onPress={handleLogin}
                 disabled={isLoading}
               >
-                <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                  {rememberMe && <IconSymbol size={14} name="checkmark" color="#FFFFFF" />}
-                </View>
-                <Text style={styles.rememberMeText}>Remember me</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity disabled={isLoading}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? 'Signing In...' : 'Sign In'}
+                </Text>
+                {!isLoading && <IconSymbol size={20} name="arrow.right" color="#FFFFFF" />}
               </TouchableOpacity>
             </View>
-
-            {/* Login Button */}
-            <TouchableOpacity 
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Text>
-              {!isLoading && <IconSymbol size={20} name="arrow.right" color="#FFFFFF" />}
-            </TouchableOpacity>
-          </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

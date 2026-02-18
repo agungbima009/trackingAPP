@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,8 +7,29 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user data on mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        setUserData(user);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -27,6 +48,7 @@ export default function ProfileScreen() {
               // Clear AsyncStorage
               await AsyncStorage.removeItem('userToken');
               await AsyncStorage.removeItem('userEmail');
+              await AsyncStorage.removeItem('user');
               
               // Navigate to login
               router.replace('/login');
@@ -120,34 +142,39 @@ export default function ProfileScreen() {
       >
         {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <IconSymbol size={48} name="person.fill" color="#FFFFFF" />
-            </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <IconSymbol size={16} name="camera.fill" color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-          
-          <Text style={styles.userName}>Edgar Carlost</Text>
-          <Text style={styles.userEmail}>edgar.carlost@email.com</Text>
-          
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>156</Text>
-              <Text style={styles.statLabel}>Total Orders</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>45</Text>
-              <Text style={styles.statLabel}>Active</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>88</Text>
-              <Text style={styles.statLabel}>Completed</Text>
-            </View>
-          </View>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#3B82F6" style={{ marginVertical: 20 }} />
+          ) : (
+            <>
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {userData?.name?.charAt(0).toUpperCase() || 'U'}
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.editAvatarButton}>
+                  <IconSymbol size={16} name="camera.fill" color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              
+              <Text style={styles.userName}>{userData?.name || 'User'}</Text>
+              <Text style={styles.userEmail}>{userData?.email || 'email@example.com'}</Text>
+              
+              {userData?.department && (
+                <View style={styles.userInfoChip}>
+                  <IconSymbol size={14} name="building.2.fill" color="#3B82F6" />
+                  <Text style={styles.userInfoText}>{userData.department}</Text>
+                </View>
+              )}
+              
+              {userData?.position && (
+                <View style={styles.userInfoChip}>
+                  <IconSymbol size={14} name="briefcase.fill" color="#6B7280" />
+                  <Text style={styles.userInfoText}>{userData.position}</Text>
+                </View>
+              )}
+            </>
+          )}
         </View>
 
         {/* Menu Sections */}
@@ -361,5 +388,25 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 24,
+  },
+  avatarText: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  userInfoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+    gap: 6,
+  },
+  userInfoText: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });
