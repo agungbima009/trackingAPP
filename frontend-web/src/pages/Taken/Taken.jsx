@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAssignments, createAssignment, updateAssignment, deleteAssignment, getTasks, getUsers } from '../services/api';
+import { getAssignments, createAssignment, updateAssignment, deleteAssignment, getTasks, getUsers } from '../../services/api';
 import './Taken.css';
 
 function Taken() {
@@ -17,7 +17,7 @@ function Taken() {
     user_ids: [],
     date: '',
     start_time: '',
-    status: 'pending'
+    status: 'active'
   });
 
   const [filters, setFilters] = useState({
@@ -85,7 +85,7 @@ function Taken() {
       user_ids: [],
       date: new Date().toISOString().split('T')[0],
       start_time: '',
-      status: 'pending'
+      status: 'active'
     });
   };
 
@@ -176,7 +176,7 @@ function Taken() {
           user_ids: assignment.user_ids || [],
           date: assignment.date?.split('T')[0] || '',
           start_time: assignment.start_time || '',
-          status: assignment.status || 'pending'
+          status: assignment.status || 'active'
         });
 
         setCurrentTakenId(takenId);
@@ -207,9 +207,8 @@ function Taken() {
   const getStatusBadgeClass = (status) => {
     const statusMap = {
       'pending': 'status-badge pending',
-      'in_progress': 'status-badge active',
-      'completed': 'status-badge completed',
-      'cancelled': 'status-badge cancelled'
+      'active': 'status-badge active',
+      'completed': 'status-badge completed'
     };
     return statusMap[status] || 'status-badge';
   };
@@ -266,9 +265,8 @@ function Taken() {
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
+            <option value="active">Active</option>
             <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
           </select>
 
           <input
@@ -482,9 +480,8 @@ function Taken() {
                   onChange={handleInputChange}
                 >
                   <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
+                  <option value="active">Active</option>
                   <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
 

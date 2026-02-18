@@ -55,7 +55,7 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location' => 'required|string|max:255',
-            'status' => 'required|in:pending,active,completed,cancelled',
+            'status' => 'required|in:pending,active,completed',
         ]);
 
         $task = TasksModel::create([
@@ -103,7 +103,7 @@ class TaskController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
             'location' => 'sometimes|required|string|max:255',
-            'status' => 'sometimes|required|in:pending,active,completed,cancelled',
+            'status' => 'sometimes|required|in:pending,active,completed',
         ]);
 
         $task->update($request->only([

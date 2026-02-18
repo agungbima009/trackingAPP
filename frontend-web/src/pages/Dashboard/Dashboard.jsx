@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Dashboard.css';
 import MetricCard from './MetricCard';
-import DataTable from './DataTable';
+import DataTable from '../shared/DataTable';
 import Chart from './Chart';
 
 function Dashboard() {
