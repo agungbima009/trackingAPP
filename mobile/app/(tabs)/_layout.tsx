@@ -35,10 +35,10 @@ export default function TabLayout() {
         options={{
           title: 'Beranda',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
-              size={22} 
-              name={focused ? 'house.fill' : 'house'} 
-              color={color} 
+            <IconSymbol
+              size={22}
+              name={focused ? 'house.fill' : 'house'}
+              color={color}
             />
           ),
         }}
@@ -48,10 +48,10 @@ export default function TabLayout() {
         options={{
           title: 'Laporan',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
-              size={22} 
-              name={focused ? 'doc.text.fill' : 'doc.text'} 
-              color={color} 
+            <IconSymbol
+              size={22}
+              name={focused ? 'doc.text.fill' : 'doc.text'}
+              color={color}
             />
           ),
         }}
@@ -61,10 +61,10 @@ export default function TabLayout() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
-              size={22} 
-              name={focused ? 'person.fill' : 'person'} 
-              color={color} 
+            <IconSymbol
+              size={22}
+              name={focused ? 'person.fill' : 'person'}
+              color={color}
             />
           ),
         }}

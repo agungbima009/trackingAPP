@@ -49,7 +49,7 @@ export default function ProfileScreen() {
               await AsyncStorage.removeItem('userToken');
               await AsyncStorage.removeItem('userEmail');
               await AsyncStorage.removeItem('user');
-              
+
               // Navigate to login
               router.replace('/login');
             } catch (error) {
@@ -135,8 +135,8 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
@@ -156,17 +156,17 @@ export default function ProfileScreen() {
                   <IconSymbol size={14} name="camera.fill" color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
-              
+
               <Text style={styles.userName}>{userData?.name || 'User'}</Text>
               <Text style={styles.userEmail}>{userData?.email || 'email@example.com'}</Text>
-              
+
               {userData?.department && (
                 <View style={styles.userInfoChip}>
                   <IconSymbol size={12} name="building.2.fill" color="#1d1d1f" />
                   <Text style={styles.userInfoText}>{userData.department}</Text>
                 </View>
               )}
-              
+
               {userData?.position && (
                 <View style={styles.userInfoChip}>
                   <IconSymbol size={12} name="briefcase.fill" color="#1d1d1f" />

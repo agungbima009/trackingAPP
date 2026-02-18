@@ -95,8 +95,8 @@ export default function TaskDetailScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Success Check Overlay */}
-      <SuccessCheckOverlay 
-        visible={showSuccess} 
+      <SuccessCheckOverlay
+        visible={showSuccess}
         onFinish={handleSuccessFinish}
       />
 
@@ -218,7 +218,7 @@ export default function TaskDetailScreen() {
         {/* Action Buttons */}
         <View style={styles.section}>
           {!isTracking ? (
-            <SwipeableButton 
+            <SwipeableButton
               onSwipeComplete={handleStartTracking}
             />
           ) : (

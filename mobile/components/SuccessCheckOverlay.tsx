@@ -41,35 +41,35 @@ export default function SuccessCheckOverlay({
     if (visible) {
       // Background fade in - more subtle
       opacity.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
-      
+
       // Move from bottom to center with refined easing
       translateY.value = withSpring(0, {
         damping: 18,
         stiffness: 120,
       });
-      
+
       // Scale up the container - more refined
       scale.value = withSequence(
         withSpring(1.1, { damping: 10 }),
         withSpring(1, { damping: 12 })
       );
-      
+
       // Subtle glow effect
       glowOpacity.value = withSequence(
         withDelay(150, withTiming(0.6, { duration: 250 })),
         withTiming(0, { duration: 400 })
       );
-      
+
       // Check icon scale with subtle bounce
       checkScale.value = withDelay(
         250,
         withSpring(1, { damping: 8, stiffness: 120 })
       );
-      
+
       // Draw checkmark smoothly
       progress.value = withDelay(
         350,
-        withTiming(1, { 
+        withTiming(1, {
           duration: 600,
           easing: Easing.out(Easing.cubic),
         })
@@ -143,7 +143,7 @@ export default function SuccessCheckOverlay({
       <Animated.View style={[styles.box, circleStyle]}>
         {/* Subtle Glow Effect */}
         <Animated.View style={[styles.glow, glowStyle]} />
-        
+
         <Animated.View style={checkIconStyle}>
           <Svg width={120} height={120}>
             {/* Background Circle - Subtle */}
@@ -154,7 +154,7 @@ export default function SuccessCheckOverlay({
               fill="#1d1d1f"
               opacity="0.05"
             />
-            
+
             {/* Main Circle - Minimalist Black */}
             <Circle
               cx="60"
@@ -178,7 +178,7 @@ export default function SuccessCheckOverlay({
             />
           </Svg>
         </Animated.View>
-        
+
         {/* Success Text */}
         <Animated.Text style={[styles.successText, textStyle]}>
           Success

@@ -48,9 +48,9 @@ export default function HomeScreen() {
 
   // Data tugas yang tersedia
   const availableTasks = [
-    { 
-      id: 'TSK-001', 
-      title: 'Inspeksi Gedung B - Lantai 5', 
+    {
+      id: 'TSK-001',
+      title: 'Inspeksi Gedung B - Lantai 5',
       location: 'Jl. Thamrin No. 45, Jakarta Pusat',
       priority: 'high',
       deadline: '16 Feb 2026, 16:00',
@@ -58,9 +58,9 @@ export default function HomeScreen() {
       description: 'Melakukan inspeksi rutin gedung B lantai 5',
       status: 'available'
     },
-    { 
-      id: 'TSK-002', 
-      title: 'Survei Lokasi Project C', 
+    {
+      id: 'TSK-002',
+      title: 'Survei Lokasi Project C',
       location: 'Jl. Sudirman No. 123, Jakarta Selatan',
       priority: 'medium',
       deadline: '16 Feb 2026, 18:00',
@@ -68,9 +68,9 @@ export default function HomeScreen() {
       description: 'Survei lokasi untuk persiapan konstruksi project C',
       status: 'available'
     },
-    { 
-      id: 'TSK-003', 
-      title: 'Meeting dengan Client XYZ', 
+    {
+      id: 'TSK-003',
+      title: 'Meeting dengan Client XYZ',
       location: 'Plaza Indonesia, Jakarta Pusat',
       priority: 'high',
       deadline: '17 Feb 2026, 10:00',
@@ -78,9 +78,9 @@ export default function HomeScreen() {
       description: 'Meeting untuk presentasi proposal project',
       status: 'available'
     },
-    { 
-      id: 'TSK-004', 
-      title: 'Pengecekan Material Site A', 
+    {
+      id: 'TSK-004',
+      title: 'Pengecekan Material Site A',
       location: 'Jl. HR Rasuna Said, Jakarta Selatan',
       priority: 'low',
       deadline: '17 Feb 2026, 14:00',
@@ -138,8 +138,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
@@ -166,7 +166,7 @@ export default function HomeScreen() {
         {activeTask && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tugas Sedang Dikerjakan</Text>
-            
+
             <TouchableOpacity style={styles.activeTaskCard}>
               <View style={styles.activeTaskHeader}>
                 <View style={styles.activeTaskBadge}>
@@ -192,7 +192,7 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.activeTaskActions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.activeTaskButton}
                   onPress={() => router.push(`/task-detail?taskId=${activeTask.id}`)}
                 >
@@ -279,7 +279,7 @@ export default function HomeScreen() {
                     <IconSymbol size={14} name="calendar" color="#EF4444" />
                     <Text style={styles.deadlineText}>{task.deadline}</Text>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.takeTaskButton}
                     onPress={() => router.push(`/task-detail?taskId=${task.id}`)}
                   >

@@ -22,7 +22,7 @@ interface Photo {
 export default function ReportDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
+
   // State management
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [reportDescription, setReportDescription] = useState('Inspeksi rutin gedung sudah selesai. Tidak ada temuan masalah. Semua sistem berjalan normal dan tidak terlihat kerusakan struktural maupun sistem elektrikal.');
@@ -49,7 +49,7 @@ export default function ReportDetailScreen() {
     try {
       // Request camera permissions
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Akses Ditolak', 'Izin kamera diperlukan untuk mengambil foto');
         return;
@@ -84,7 +84,7 @@ export default function ReportDetailScreen() {
     try {
       // Request media library permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Akses Ditolak', 'Izin galeri diperlukan untuk memilih foto');
         return;
@@ -256,7 +256,7 @@ export default function ReportDetailScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
                 if (isEditingDescription) {
                   handleSaveDescription();
@@ -266,17 +266,17 @@ export default function ReportDetailScreen() {
               }}
               style={styles.editButton}
             >
-              <IconSymbol 
-                size={14} 
-                name={isEditingDescription ? "checkmark" : "pencil"} 
-                color="#FFFFFF" 
+              <IconSymbol
+                size={14}
+                name={isEditingDescription ? "checkmark" : "pencil"}
+                color="#FFFFFF"
               />
               <Text style={styles.editButtonText}>
                 {isEditingDescription ? 'Simpan' : 'Edit'}
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           {isEditingDescription ? (
             <View style={styles.descriptionEditCard}>
               <TextInput
@@ -287,7 +287,7 @@ export default function ReportDetailScreen() {
                 value={reportDescription}
                 onChangeText={setReportDescription}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setIsEditingDescription(false)}
                 style={styles.cancelButton}
               >
@@ -310,10 +310,10 @@ export default function ReportDetailScreen() {
               <Text style={styles.photoCountText}>{photos.length} Foto</Text>
             </View>
           </View>
-          
+
           {photos.length === 0 ? (
             // Tampilkan tombol tambah foto ketika tidak ada foto
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.photoItem}
               onPress={() => setShowPhotoOptions(true)}
             >
@@ -333,7 +333,7 @@ export default function ReportDetailScreen() {
                       source={{ uri: photo.uri }}
                       style={styles.photoImage}
                     />
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.photoDeleteButton}
                       onPress={() => handleRemovePhoto(photo.id)}
                     >
@@ -343,7 +343,7 @@ export default function ReportDetailScreen() {
                 ))}
 
                 {/* Upload Photo Button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.photoItem}
                   onPress={() => setShowPhotoOptions(true)}
                 >
@@ -399,10 +399,10 @@ export default function ReportDetailScreen() {
                       styles.timelineDot,
                       index === 0 && styles.timelineDotActive
                     ]}>
-                      <IconSymbol 
-                        size={12} 
-                        name={index === 0 ? "checkmark" : "location.fill"} 
-                        color="#FFFFFF" 
+                      <IconSymbol
+                        size={12}
+                        name={index === 0 ? "checkmark" : "location.fill"}
+                        color="#FFFFFF"
                       />
                     </View>
                     {index < locationHistory.length - 1 && (
@@ -467,7 +467,7 @@ export default function ReportDetailScreen() {
               </View>
 
               <View style={styles.modalOptions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleCameraPhoto}
                 >
@@ -481,7 +481,7 @@ export default function ReportDetailScreen() {
                   <IconSymbol size={18} name="chevron.right" color="#86868b" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleGalleryPhoto}
                 >
@@ -496,7 +496,7 @@ export default function ReportDetailScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalCancelButton}
                 onPress={() => setShowPhotoOptions(false)}
               >

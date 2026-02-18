@@ -83,15 +83,15 @@ export default function LaporanScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Summary Card */}
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Ringkasan Hari Ini</Text>
-          
+
           <View style={styles.summaryStats}>
             <View style={styles.summaryStatItem}>
               <View style={styles.summaryStatIcon}>
@@ -209,7 +209,7 @@ export default function LaporanScreen() {
                       {report.date} • {report.time}
                     </Text>
                   </View>
-                  
+
                   <View style={styles.reportMetaItem}>
                     <IconSymbol size={14} name="location.fill" color="#86868b" />
                     <Text style={styles.reportMetaText} numberOfLines={1}>
@@ -234,13 +234,13 @@ export default function LaporanScreen() {
                     <IconSymbol size={16} name="square.and.arrow.up" color="#86868b" />
                     <Text style={styles.reportActionText}>Share</Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity style={styles.reportActionButton}>
                     <IconSymbol size={16} name="doc.on.doc" color="#86868b" />
                     <Text style={styles.reportActionText}>Duplikat</Text>
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={[styles.reportActionButton, styles.viewButton]}
                     onPress={() => router.push(`/report-detail?reportId=${report.id}`)}
                   >
