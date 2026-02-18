@@ -70,17 +70,26 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'sanctum'
+            ]);
         }
 
         // Create roles and assign permissions
 
         // SuperAdmin role - has all permissions
-        $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
+        $superadmin = Role::firstOrCreate([
+            'name' => 'superadmin',
+            'guard_name' => 'sanctum'
+        ]);
         $superadmin->syncPermissions(Permission::all());
 
         // Admin role - can manage users and view all data
-        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $admin = Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'sanctum'
+        ]);
         $admin->syncPermissions([
             'view users',
             'create users',
@@ -99,7 +108,10 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Employee role - basic tracking permissions
-        $employee = Role::firstOrCreate(['name' => 'employee']);
+        $employee = Role::firstOrCreate([
+            'name' => 'employee',
+            'guard_name' => 'sanctum'
+        ]);
         $employee->syncPermissions([
             'view own tasks',
             'manage own tasks',
