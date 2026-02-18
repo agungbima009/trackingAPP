@@ -20,7 +20,7 @@ fi
 
 # Default values
 PORT=${1:-8000}
-HOST=${2:-0.0.0.0}
+HOST=${2:-127.0.0.1}
 
 echo ""
 echo -e "${GREEN}🚀 Laravel Dev Server${NC}"

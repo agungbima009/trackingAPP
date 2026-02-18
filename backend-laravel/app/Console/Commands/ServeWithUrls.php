@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 
 class ServeWithUrls extends Command
 {
-    protected $signature = 'serve:urls {--host=0.0.0.0 : The host address to serve on} {--port=8000 : The port to serve on}';
+    protected $signature = 'serve:urls {--host=127.0.0.1 : The host address to serve on} {--port=8000 : The port to serve on}';
     protected $description = 'Start Laravel development server with URL display';
 
     public function handle()

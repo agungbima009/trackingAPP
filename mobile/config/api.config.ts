@@ -12,8 +12,8 @@
 // export const API_BASE_URL = 'http://localhost:8000/api';
 
 // 3. Physical Device (LOCAL DEVELOPMENT)
-// Machine IP: 10.109.64.43
-export const API_BASE_URL = 'http://10.109.64.43:8000/api';
+// Using localhost server
+export const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 // 4. Production
 // export const API_BASE_URL = 'https://your-production-domain.com/api';
