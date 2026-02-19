@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Task.css';
-import { getTasks, createTask, updateTask, deleteTask, getTaskDetails } from '../../services/api';
+import { getTasks, createTask, updateTask, deleteTask, getTaskDetails, markTaskAsCompleted } from '../../services/api';
 
 function Task() {
   const [showModal, setShowModal] = useState(false);
@@ -208,15 +208,16 @@ function Task() {
   const handleMarkAsCompleted = async (taskId) => {
     showConfirmModal(
       'Tandai Selesai',
-      'Tandai task ini sebagai selesai?',
+      'Tandai task ini sebagai selesai? (Hanya task dengan status pending dapat ditandai selesai)',
       async () => {
         try {
-          await updateTask(taskId, { status: 'completed' });
+          await markTaskAsCompleted(taskId);
           showToast('Task berhasil ditandai sebagai selesai!', 'success');
           loadTasks(); // Reload tasks
         } catch (error) {
           console.error('Error marking task as completed:', error);
-          showToast('Gagal mengupdate status task. Silakan coba lagi.', 'error');
+          const errorMessage = error.response?.data?.message || 'Gagal mengupdate status task. Silakan coba lagi.';
+          showToast(errorMessage, 'error');
         }
       },
       'complete'

@@ -628,6 +628,48 @@ GET /api/admin/departments
 
 ## 📋 Task Management Routes
 
+### Task Status Workflow
+
+The task management system uses a state-based workflow to track the lifecycle of tasks and their assignments:
+
+#### Task Status Flow
+```
+active (during work hours) ←→ inactive (outside work hours)
+              ↓
+            pending (when admin assigns to employee)
+              ↓
+           completed (when admin marks task as complete)
+```
+
+**Status Descriptions:**
+- **active**: Task is available and within working hours (08:00 - 17:00 by default)
+- **inactive**: Task exists but is outside working hours
+- **pending**: Task has been assigned to employees and awaits action
+- **completed**: Task and all its assignments have been completed (admin-confirmed)
+
+#### Taken Task (Assignment) Status Flow
+```
+pending (when assigned)
+   ↓
+in_progress (when employee starts)
+   ↓
+completed (when employee submits report)
+```
+
+**Status Descriptions:**
+- **pending**: Assignment created, waiting for employee to start
+- **in_progress**: Employee has started working on the task
+- **completed**: Employee has submitted their report/completed the work
+
+#### Example Workflow
+1. Admin creates a task → Status: `active` (if within work hours)
+2. Admin assigns task to employees → Task Status: `pending`, Taken Task Status: `pending`
+3. Employee starts the task → Taken Task Status: `in_progress`
+4. Employee submits report → Taken Task Status: `completed`
+5. Admin confirms completion → Task Status: `completed`
+
+---
+
 ### Get All Tasks
 ```http
 GET /api/admin/tasks
@@ -791,6 +833,9 @@ POST /api/admin/tasks/{id}/assign
 }
 ```
 
+**Description:** 
+Assigns a task to one or more employees. This action automatically changes the task status from `active` to `pending`.
+
 **Response (201):**
 ```json
 {
@@ -805,6 +850,58 @@ POST /api/admin/tasks/{id}/assign
   }
 }
 ```
+
+**Status Flow:**
+- Task changes from: `active` → `pending` (when admin assigns)
+- Taken task is created with: `pending` status
+
+---
+
+### Mark Task as Completed
+```http
+POST /api/admin/tasks/{id}/mark-completed
+```
+
+**Description:**
+Marks a task as completed after employees have submitted their reports. The task must be in `pending` status and have at least one completed assignment.
+
+**Response (200):**
+```json
+{
+  "message": "Task marked as completed successfully",
+  "task": {
+    "task_id": "task-uuid",
+    "title": "Client Meeting",
+    "status": "completed",
+    "manual_override": true,
+    "taken_tasks": [
+      {
+        "taken_task_id": "uuid",
+        "status": "completed"
+      }
+    ]
+  }
+}
+```
+
+**Error Responses:**
+
+**Invalid Status (422):**
+```json
+{
+  "message": "Only pending tasks can be marked as completed"
+}
+```
+
+**No Completed Assignments (422):**
+```json
+{
+  "message": "No completed assignments found. At least one assignment must be completed before marking task as completed."
+}
+```
+
+**Status Flow:**
+- Task changes from: `pending` → `completed` (when admin confirms)
 
 ---
 
@@ -2409,6 +2506,7 @@ GET /api/tickets/statistics
 | PUT | `/api/admin/tasks/{id}` | Update task |
 | DELETE | `/api/admin/tasks/{id}` | Delete task |
 | POST | `/api/admin/tasks/{id}/assign` | Assign task to users |
+| POST | `/api/admin/tasks/{id}/mark-completed` | Mark task as completed |
 | GET | `/api/admin/tasks/statistics` | Get task statistics |
 | GET | `/api/admin/tasks/by-location` | Get tasks by location |
 
