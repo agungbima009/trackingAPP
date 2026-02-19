@@ -284,6 +284,16 @@ export const getTasksByLocation = async () => {
   return response.data;
 };
 
+/**
+ * Mark task as completed (admin action after report submitted)
+ * @param {string} taskId - Task ID
+ * @returns {Promise} Updated task
+ */
+export const markTaskAsCompleted = async (taskId) => {
+  const response = await api.post(`/admin/tasks/${taskId}/mark-completed`);
+  return response.data;
+};
+
 // ============================================
 // TASK ASSIGNMENT SERVICES (Admin)
 // ============================================

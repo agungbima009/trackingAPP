@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tasks/statistics', [TaskController::class, 'statistics']);
         Route::get('/tasks/by-location', [TaskController::class, 'byLocation']);
         Route::post('/tasks/{id}/reset-auto', [TaskController::class, 'resetToAuto']);
+        Route::post('/tasks/{id}/mark-completed', [TaskController::class, 'markAsCompleted']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
