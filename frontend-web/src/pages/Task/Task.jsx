@@ -399,7 +399,8 @@ function Task() {
                       <td className="assignment-count">
                         {(task.taken_tasks || task.takenTasks)?.length > 0 ? (
                           <span className="assignment-badge">
-                            👥 {(task.taken_tasks || task.takenTasks).length}
+                            <img src="/icon/Checked-User-Male.png" alt="user" style={{ width: '16px', height: '16px', marginRight: '4px', verticalAlign: 'middle' }} />
+                            {(task.taken_tasks || task.takenTasks).length}
                           </span>
                         ) : (
                           <span className="no-assignment">-</span>

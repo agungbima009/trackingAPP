@@ -120,7 +120,7 @@
 }
 
 .task-table th {
-  text-align: left;
+  text-align: center;
   padding: 16px 20px;
   font-weight: 600;
   color: #ffffff;
@@ -141,6 +141,7 @@
 .task-table td {
   padding: 16px 20px;
   color: #1d1d1f;
+  text-align: center;
 }
 
 .row-number {
@@ -266,15 +267,15 @@
 
 .actions-header {
   text-align: center;
-  width: 130px;
-  min-width: 130px;
+  width: 160px;
+  min-width: 160px;
 }
 
 .actions-cell {
   text-align: center;
   white-space: nowrap;
-  width: 130px;
-  min-width: 130px;
+  width: 160px;
+  min-width: 160px;
 }
 
 .action-btn {
@@ -288,40 +289,35 @@
   justify-content: center;
   transition: all 0.2s;
   margin: 0 2px;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
 }
 
-.action-btn:hover {
-  background: #f5f5f7;
-  border-color: #86868b;
-}
-
-.edit-btn {
+.action-btn.edit-btn {
   color: #1d1d1f;
 }
 
-.edit-btn:hover {
+.action-btn.edit-btn:hover {
   background: #000000;
   border-color: #000000;
   color: white;
 }
 
-.complete-btn {
+.action-btn.complete-btn {
   color: #34c759;
 }
 
-.complete-btn:hover {
+.action-btn.complete-btn:hover {
   background: #34c759;
   border-color: #34c759;
   color: white;
 }
 
-.delete-btn {
+.action-btn.delete-btn {
   color: #ef4444;
 }
 
-.delete-btn:hover {
+.action-btn.delete-btn:hover {
   background: #ef4444;
   border-color: #ef4444;
   color: white;
