@@ -188,6 +188,12 @@ class TaskController extends Controller
             'start_time' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
 
+        // Update task status to 'pending' when assigning
+        $task->update([
+            'status' => 'pending',
+            'manual_override' => true
+        ]);
+
         // Create single assignment for all users
         $assignment = TakenTaskModel::create([
             'task_id' => $task->task_id,
@@ -260,6 +266,40 @@ class TaskController extends Controller
             'task' => $task->load('takenTasks'),
             'current_status' => $task->status,
             'is_within_hours' => $task->isWithinWorkingHours()
+        ]);
+    }
+
+    /**
+     * Mark task as completed (admin action after report is submitted)
+     */
+    public function markAsCompleted(Request $request, $id)
+    {
+        $task = TasksModel::findOrFail($id);
+
+        // Task must be in pending status to mark as completed
+        if ($task->status !== 'pending') {
+            return response()->json([
+                'message' => 'Only pending tasks can be marked as completed'
+            ], 422);
+        }
+
+        // Check if there are any completed taken tasks for this task
+        $completedTakenTasks = $task->takenTasks()->where('status', 'completed')->count();
+        
+        if ($completedTakenTasks === 0) {
+            return response()->json([
+                'message' => 'No completed assignments found. At least one assignment must be completed before marking task as completed.'
+            ], 422);
+        }
+
+        $task->update([
+            'status' => 'completed',
+            'manual_override' => true
+        ]);
+
+        return response()->json([
+            'message' => 'Task marked as completed successfully',
+            'task' => $task->load('takenTasks')
         ]);
     }
 }
