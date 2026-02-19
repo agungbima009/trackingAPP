@@ -93,10 +93,12 @@ export default function ReportDetailScreen() {
     try {
       setIsLoadingReport(true);
       const reportId = params.reportId as string;
-      console.log('Loading report details for ID:', reportId);
-      
+      console.log('=== Loading Report Details ===');
+      console.log('Report ID:', reportId);
+
       const response = await reportsAPI.getReportDetails(reportId);
-      console.log('Report response:', JSON.stringify(response, null, 2));
+      console.log('=== API Response ===');
+      console.log('Full response:', JSON.stringify(response, null, 2));
 
       if (response.report) {
         const report = response.report;
@@ -105,26 +107,37 @@ export default function ReportDetailScreen() {
         setIsReadOnly(true);
         setIsEditingDescription(false);
 
-        console.log('Report data loaded:', {
-          id: report.report_id,
-          title: report.takenTask?.task?.title,
-          hasImages: !!report.image,
-          hasTeam: !!report.takenTask?.users,
-        });
+        console.log('=== Report Data Loaded ===');
+        console.log('Report ID:', report.report_id);
+        console.log('Ticket Number:', report.ticket_number);
+        console.log('Title:', report.takenTask?.task?.title);
+        console.log('Created At:', report.created_at);
+        console.log('Has Images:', !!report.image);
+        console.log('Image String:', report.image);
+        console.log('Has Team:', !!report.takenTask?.users);
 
         // Parse photos from image array
-        if (report.image && typeof report.image === 'string') {
+        if (report.image) {
           try {
-            const imageArray = JSON.parse(report.image);
+            console.log('=== Parsing Images ===');
+            console.log('Image type:', typeof report.image);
+            console.log('Image value:', report.image);
+
+            const imageArray = typeof report.image === 'string'
+              ? JSON.parse(report.image)
+              : report.image;
+
+            console.log('Parsed image array:', imageArray);
+
             if (Array.isArray(imageArray)) {
-              // Get base URL without /api suffix
               const baseUrl = API_BASE_URL.replace('/api', '');
+              console.log('Base URL:', baseUrl);
+
               const photosList = imageArray.map((imgPath: string, index: number) => {
-                // Construct full URL for image
-                const fullImageUrl = imgPath.startsWith('http') 
-                  ? imgPath 
+                const fullImageUrl = imgPath.startsWith('http')
+                  ? imgPath
                   : `${baseUrl}/storage/${imgPath}`;
-                console.log('Photo URL:', fullImageUrl);
+                console.log(`Photo ${index + 1} URL:`, fullImageUrl);
                 return {
                   id: `${index}`,
                   uri: fullImageUrl,
@@ -132,21 +145,25 @@ export default function ReportDetailScreen() {
                 };
               });
               setPhotos(photosList);
-              console.log(`Loaded ${photosList.length} photos`);
+              console.log(`✅ Loaded ${photosList.length} photos`);
             }
           } catch (error) {
-            console.error('Error parsing images:', error);
+            console.error('❌ Error parsing images:', error);
           }
+        } else {
+          console.log('⚠️ No images in report');
         }
 
         // Load team members from the taken task
         if (report.takenTask?.users && Array.isArray(report.takenTask.users)) {
           setTeamMembers(report.takenTask.users);
-          console.log(`Loaded ${report.takenTask.users.length} team members`);
+          console.log(`✅ Loaded ${report.takenTask.users.length} team members`);
+        } else {
+          console.log('⚠️ No team members in report');
         }
       }
     } catch (error) {
-      console.error('Error loading report details:', error);
+      console.error('❌ Error loading report details:', error);
       Alert.alert('Error', 'Gagal memuat detail laporan');
     } finally {
       setIsLoadingReport(false);
@@ -234,37 +251,37 @@ export default function ReportDetailScreen() {
     title: reportData.takenTask?.task?.title || 'Laporan',
     location: reportData.takenTask?.task?.location || '',
     description: reportData.takenTask?.task?.description || '',
-    date: new Date(reportData.created_at).toLocaleDateString('id-ID', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
+    date: new Date(reportData.created_at).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
     }),
-    time: new Date(reportData.created_at).toLocaleTimeString('id-ID', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    time: new Date(reportData.created_at).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
     }),
     status: 'completed',
-    startTime: reportData.takenTask?.start_time 
-      ? new Date(reportData.takenTask.start_time).toLocaleTimeString('id-ID', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }) 
+    startTime: reportData.takenTask?.start_time
+      ? new Date(reportData.takenTask.start_time).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
       : '-',
-    endTime: reportData.takenTask?.end_time 
-      ? new Date(reportData.takenTask.end_time).toLocaleTimeString('id-ID', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }) 
+    endTime: reportData.takenTask?.end_time
+      ? new Date(reportData.takenTask.end_time).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
       : '-',
-    duration: reportData.takenTask?.end_time && reportData.takenTask?.start_time 
+    duration: reportData.takenTask?.end_time && reportData.takenTask?.start_time
       ? (() => {
-          const start = new Date(reportData.takenTask.start_time);
-          const end = new Date(reportData.takenTask.end_time);
-          const diffMs = end.getTime() - start.getTime();
-          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          return `${diffHours}j ${diffMinutes}m`;
-        })()
+        const start = new Date(reportData.takenTask.start_time);
+        const end = new Date(reportData.takenTask.end_time);
+        const diffMs = end.getTime() - start.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        return `${diffHours}j ${diffMinutes}m`;
+      })()
       : '-',
     hasPhoto: photos.length > 0,
     user: reportData.user,
@@ -604,258 +621,267 @@ export default function ReportDetailScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Report Info Card */}
           <View style={styles.section}>
-          <View style={styles.reportCard}>
-            <View style={styles.reportHeader}>
-              <View style={styles.reportHeaderLeft}>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: getStatusColor(report.status) }
-                ]}>
-                  <Text style={styles.statusBadgeText}>
-                    {getStatusText(report.status)}
+            <View style={styles.reportCard}>
+              <View style={styles.reportHeader}>
+                <View style={styles.reportHeaderLeft}>
+                  <View style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(report.status) }
+                  ]}>
+                    <Text style={styles.statusBadgeText}>
+                      {getStatusText(report.status)}
+                    </Text>
+                  </View>
+                  <Text style={styles.reportId}>{report.ticket_number}</Text>
+                </View>
+              </View>
+
+              <Text style={styles.reportTitle}>{report.title}</Text>
+
+              <View style={styles.reportMeta}>
+                <View style={styles.reportMetaItem}>
+                  <IconSymbol size={14} name="calendar" color="#86868b" />
+                  <Text style={styles.reportMetaText}>{report.date}</Text>
+                </View>
+                <View style={styles.reportMetaItem}>
+                  <IconSymbol size={14} name="clock.fill" color="#86868b" />
+                  <Text style={styles.reportMetaText}>
+                    {report.time || report.startTime}
                   </Text>
                 </View>
-                <Text style={styles.reportId}>{report.ticket_number}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.reportTitle}>{report.title}</Text>
-
-            <View style={styles.reportMeta}>
-              <View style={styles.reportMetaItem}>
-                <IconSymbol size={14} name="calendar" color="#86868b" />
-                <Text style={styles.reportMetaText}>{report.date}</Text>
-              </View>
-              <View style={styles.reportMetaItem}>
-                <IconSymbol size={14} name="clock.fill" color="#86868b" />
-                <Text style={styles.reportMetaText}>
-                  {report.startTime} - {report.endTime}
-                </Text>
-              </View>
-              {report.duration && report.duration !== '-' && (
-                <View style={styles.reportMetaItem}>
-                  <IconSymbol size={14} name="timer" color="#86868b" />
-                  <Text style={styles.reportMetaText}>Durasi: {report.duration}</Text>
-                </View>
-              )}
-              {report.location && (
-                <View style={styles.reportMetaItem}>
-                  <IconSymbol size={14} name="location.fill" color="#86868b" />
-                  <Text style={styles.reportMetaText}>{report.location}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-
-        {/* Team Members Section */}
-        {teamMembers.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tim Tugas</Text>
-            <View style={styles.teamContainer}>
-              {isLoadingTeam ? (
-                <ActivityIndicator size="small" color="#1d1d1f" />
-              ) : (
-                teamMembers.map((member) => (
-                  <View key={member.id} style={styles.teamMemberCard}>
-                    <View style={styles.teamMemberAvatar}>
-                      <Text style={styles.teamMemberAvatarText}>
-                        {member.name?.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={styles.teamMemberInfo}>
-                      <Text style={styles.teamMemberName}>{member.name}</Text>
-                      <Text style={styles.teamMemberPosition}>{member.position || 'Team Member'}</Text>
-                    </View>
+                {report.duration && report.duration !== '-' && (
+                  <View style={styles.reportMetaItem}>
+                    <IconSymbol size={14} name="timer" color="#86868b" />
+                    <Text style={styles.reportMetaText}>Durasi: {report.duration}</Text>
                   </View>
-                ))
-              )}
+                )}
+                {report.location && (
+                  <View style={styles.reportMetaItem}>
+                    <IconSymbol size={14} name="location.fill" color="#86868b" />
+                    <Text style={styles.reportMetaText}>{report.location}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        )}
 
-        {/* Description */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
-            {!isNewReport && !isReadOnly && (
-              <TouchableOpacity
-                onPress={() => {
-                  if (isEditingDescription) {
-                    handleSaveDescription();
-                  } else {
-                    setIsEditingDescription(true);
-                  }
-                }}
-                style={styles.editButton}
-              >
-                <IconSymbol
-                  size={14}
-                  name={isEditingDescription ? "checkmark" : "pencil"}
-                  color="#FFFFFF"
+          {/* Team Members Section */}
+          {teamMembers.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Tim Tugas</Text>
+              <View style={styles.teamContainer}>
+                {isLoadingTeam ? (
+                  <ActivityIndicator size="small" color="#1d1d1f" />
+                ) : (
+                  teamMembers.map((member) => (
+                    <View key={member.id} style={styles.teamMemberCard}>
+                      <View style={styles.teamMemberAvatar}>
+                        <Text style={styles.teamMemberAvatarText}>
+                          {member.name?.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.teamMemberInfo}>
+                        <Text style={styles.teamMemberName}>{member.name}</Text>
+                        <Text style={styles.teamMemberPosition}>{member.position || 'Team Member'}</Text>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Description */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
+              {!isNewReport && !isReadOnly && (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (isEditingDescription) {
+                      handleSaveDescription();
+                    } else {
+                      setIsEditingDescription(true);
+                    }
+                  }}
+                  style={styles.editButton}
+                >
+                  <IconSymbol
+                    size={14}
+                    name={isEditingDescription ? "checkmark" : "pencil"}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.editButtonText}>
+                    {isEditingDescription ? 'Simpan' : 'Edit'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {isEditingDescription ? (
+              <View style={styles.descriptionEditCard}>
+                <TextInput
+                  style={styles.descriptionInput}
+                  multiline
+                  placeholder="Masukkan deskripsi laporan..."
+                  placeholderTextColor="#9CA3AF"
+                  value={reportDescription}
+                  onChangeText={setReportDescription}
                 />
-                <Text style={styles.editButtonText}>
-                  {isEditingDescription ? 'Simpan' : 'Edit'}
-                </Text>
-              </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.descriptionCard}>
+                <Text style={styles.descriptionText}>{reportDescription}</Text>
+              </View>
             )}
           </View>
 
-          {isEditingDescription ? (
-            <View style={styles.descriptionEditCard}>
-              <TextInput
-                style={styles.descriptionInput}
-                multiline
-                placeholder="Masukkan deskripsi laporan..."
-                placeholderTextColor="#9CA3AF"
-                value={reportDescription}
-                onChangeText={setReportDescription}
-              />
+          {/* Photos */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Foto Dokumentasi</Text>
+              <View style={styles.photoCountBadge}>
+                <IconSymbol size={12} name="photo.fill" color="#1d1d1f" />
+                <Text style={styles.photoCountText}>{photos.length} Foto</Text>
+              </View>
             </View>
-          ) : (
-            <View style={styles.descriptionCard}>
-              <Text style={styles.descriptionText}>{reportDescription}</Text>
-            </View>
-          )}
-        </View>
 
-        {/* Photos */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Foto Dokumentasi</Text>
-            <View style={styles.photoCountBadge}>
-              <IconSymbol size={12} name="photo.fill" color="#1d1d1f" />
-              <Text style={styles.photoCountText}>{photos.length} Foto</Text>
-            </View>
+            {/* Debug Info - Remove this after testing */}
+            {__DEV__ && console.log('=== Rendering Photos Section ===', { photosLength: photos.length, photos: photos.map(p => ({ id: p.id, uri: p.uri })) })}
+
+            {photos.length === 0 ? (
+              // Tampilkan tombol tambah foto ketika tidak ada foto
+              !isReadOnly && (
+                <TouchableOpacity
+                  style={styles.photoItem}
+                  onPress={() => setShowPhotoOptions(true)}
+                >
+                  <View style={styles.uploadPhotoPlaceholder}>
+                    <IconSymbol size={28} name="plus" color="#1d1d1f" />
+                    <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+                  </View>
+                </TouchableOpacity>
+              )
+            ) : (
+              // Tampilkan galeri foto dengan tombol tambah di akhir
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.photosGrid}>
+                  {/* Existing Photos */}
+                  {photos.map((photo) => (
+                    <View key={photo.id} style={styles.photoItem}>
+                      <Image
+                        source={{ uri: photo.uri }}
+                        style={styles.photoImage}
+                        onLoad={() => console.log('✅ Image loaded:', photo.uri)}
+                        onError={(e) => {
+                          console.error('❌ Image failed to load:', photo.uri);
+                          console.error('Error details:', e.nativeEvent.error);
+                        }}
+                        resizeMode="cover"
+                      />
+                      {!isReadOnly && (
+                        <TouchableOpacity
+                          style={styles.photoDeleteButton}
+                          onPress={() => handleRemovePhoto(photo.id)}
+                        >
+                          <IconSymbol size={14} name="xmark" color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))}
+
+                  {/* Upload Photo Button */}
+                  {!isReadOnly && (
+                    <TouchableOpacity
+                      style={styles.photoItem}
+                      onPress={() => setShowPhotoOptions(true)}
+                    >
+                      <View style={styles.uploadPhotoPlaceholder}>
+                        <IconSymbol size={28} name="plus" color="#1d1d1f" />
+                        <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </ScrollView>
+            )}
           </View>
 
-          {photos.length === 0 ? (
-            // Tampilkan tombol tambah foto ketika tidak ada foto
-            !isReadOnly && (
-              <TouchableOpacity
-                style={styles.photoItem}
-                onPress={() => setShowPhotoOptions(true)}
-              >
-                <View style={styles.uploadPhotoPlaceholder}>
-                  <IconSymbol size={28} name="plus" color="#1d1d1f" />
-                  <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
-                </View>
-              </TouchableOpacity>
-            )
-          ) : (
-            // Tampilkan galeri foto dengan tombol tambah di akhir
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.photosGrid}>
-                {/* Existing Photos */}
-                {photos.map((photo) => (
-                  <View key={photo.id} style={styles.photoItem}>
-                    <Image
-                      source={{ uri: photo.uri }}
-                      style={styles.photoImage}
-                    />
-                    {!isReadOnly && (
-                      <TouchableOpacity
-                        style={styles.photoDeleteButton}
-                        onPress={() => handleRemovePhoto(photo.id)}
-                      >
-                        <IconSymbol size={14} name="xmark" color="#FFFFFF" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
-
-                {/* Upload Photo Button */}
-                {!isReadOnly && (
+          {/* Actions */}
+          <View style={styles.section}>
+            {isNewReport ? (
+              <>
+                <View style={styles.actionsCard}>
                   <TouchableOpacity
-                    style={styles.photoItem}
-                    onPress={() => setShowPhotoOptions(true)}
+                    style={[styles.actionButton, styles.saveDraftButton]}
+                    onPress={handleSaveDraft}
                   >
-                    <View style={styles.uploadPhotoPlaceholder}>
-                      <IconSymbol size={28} name="plus" color="#1d1d1f" />
-                      <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
-                    </View>
+                    <IconSymbol size={18} name="folder.fill" color="#FFFFFF" />
+                    <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>Simpan Draft</Text>
                   </TouchableOpacity>
-                )}
-              </View>
-            </ScrollView>
-          )}
-        </View>
 
-        {/* Actions */}
-        <View style={styles.section}>
-          {isNewReport ? (
-            <>
+                  {/* Submit Report Button - Only show if description and photos exist */}
+                  {canSubmit && (
+                    <TouchableOpacity
+                      style={[
+                        styles.actionButton,
+                        styles.submitButton,
+                        isSubmitting && styles.buttonDisabled
+                      ]}
+                      onPress={handleSubmitReport}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                          <Text style={[styles.actionButtonText, { color: '#FFFFFF', marginLeft: 8 }]}>
+                            Mengirim...
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <IconSymbol size={18} name="paperplane.fill" color="#FFFFFF" />
+                          <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
+                            Kirim Laporan
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Submission Requirements Info */}
+                {!canSubmit && (
+                  <View style={styles.requirementsCard}>
+                    <IconSymbol name="info.circle.fill" size={16} color="#F59E0B" />
+                    <Text style={styles.requirementsText}>
+                      Untuk mengirim laporan, lengkapi deskripsi dan minimal 1 foto
+                    </Text>
+                  </View>
+                )}
+              </>
+            ) : (
               <View style={styles.actionsCard}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.saveDraftButton]}
-                  onPress={handleSaveDraft}
-                >
-                  <IconSymbol size={18} name="folder.fill" color="#FFFFFF" />
-                  <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>Simpan Draft</Text>
+                <TouchableOpacity style={styles.actionButton}>
+                  <IconSymbol size={18} name="square.and.arrow.up" color="#1d1d1f" />
+                  <Text style={styles.actionButtonText}>Share Laporan</Text>
                 </TouchableOpacity>
 
-                {/* Submit Report Button - Only show if description and photos exist */}
-                {canSubmit && (
-                  <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      styles.submitButton,
-                      isSubmitting && styles.buttonDisabled
-                    ]}
-                    onPress={handleSubmitReport}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                        <Text style={[styles.actionButtonText, { color: '#FFFFFF', marginLeft: 8 }]}>
-                          Mengirim...
-                        </Text>
-                      </>
-                    ) : (
-                      <>
-                        <IconSymbol size={18} name="paperplane.fill" color="#FFFFFF" />
-                        <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
-                          Kirim Laporan
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity style={styles.actionButton}>
+                  <IconSymbol size={18} name="doc.on.doc" color="#1d1d1f" />
+                  <Text style={styles.actionButtonText}>Duplikat</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionButton}>
+                  <IconSymbol size={18} name="square.and.arrow.down" color="#1d1d1f" />
+                  <Text style={styles.actionButtonText}>Export PDF</Text>
+                </TouchableOpacity>
               </View>
+            )}
+          </View>
 
-              {/* Submission Requirements Info */}
-              {!canSubmit && (
-                <View style={styles.requirementsCard}>
-                  <IconSymbol name="info.circle.fill" size={16} color="#F59E0B" />
-                  <Text style={styles.requirementsText}>
-                    Untuk mengirim laporan, lengkapi deskripsi dan minimal 1 foto
-                  </Text>
-                </View>
-              )}
-            </>
-          ) : (
-            <View style={styles.actionsCard}>
-              <TouchableOpacity style={styles.actionButton}>
-                <IconSymbol size={18} name="square.and.arrow.up" color="#1d1d1f" />
-                <Text style={styles.actionButtonText}>Share Laporan</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton}>
-                <IconSymbol size={18} name="doc.on.doc" color="#1d1d1f" />
-                <Text style={styles.actionButtonText}>Duplikat</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton}>
-                <IconSymbol size={18} name="square.and.arrow.down" color="#1d1d1f" />
-                <Text style={styles.actionButtonText}>Export PDF</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <View style={{ height: 32 }} />
-      </ScrollView>
+          <View style={{ height: 32 }} />
+        </ScrollView>
       )}
 
       {/* Photo Upload Options Modal */}
