@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '@/constants/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState('Semua');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const filterOptions = ['Semua', 'Menunggu', 'Berjalan', 'Selesai', 'Tidak Aktif'];
 
   // Load user data on mount
   useEffect(() => {
@@ -52,41 +56,46 @@ export default function HomeScreen() {
       id: 'TSK-001',
       title: 'Inspeksi Gedung B - Lantai 5',
       location: 'Jl. Thamrin No. 45, Jakarta Pusat',
-      priority: 'high',
+      status: 'pending',
       deadline: '16 Feb 2026, 16:00',
       estimatedTime: '2 jam',
       description: 'Melakukan inspeksi rutin gedung B lantai 5',
-      status: 'available'
     },
     {
       id: 'TSK-002',
       title: 'Survei Lokasi Project C',
       location: 'Jl. Sudirman No. 123, Jakarta Selatan',
-      priority: 'medium',
+      status: 'in_progress',
       deadline: '16 Feb 2026, 18:00',
       estimatedTime: '3 jam',
       description: 'Survei lokasi untuk persiapan konstruksi project C',
-      status: 'available'
     },
     {
       id: 'TSK-003',
       title: 'Meeting dengan Client XYZ',
       location: 'Plaza Indonesia, Jakarta Pusat',
-      priority: 'high',
+      status: 'pending',
       deadline: '17 Feb 2026, 10:00',
       estimatedTime: '1.5 jam',
       description: 'Meeting untuk presentasi proposal project',
-      status: 'available'
     },
     {
       id: 'TSK-004',
       title: 'Pengecekan Material Site A',
       location: 'Jl. HR Rasuna Said, Jakarta Selatan',
-      priority: 'low',
+      status: 'completed',
       deadline: '17 Feb 2026, 14:00',
       estimatedTime: '1 jam',
       description: 'Cek kondisi dan jumlah material di site A',
-      status: 'available'
+    },
+    {
+      id: 'TSK-006',
+      title: 'Audit Keuangan Project D',
+      location: 'Jl. MH Thamrin, Jakarta Pusat',
+      status: 'inactive',
+      deadline: '18 Feb 2026, 09:00',
+      estimatedTime: '2.5 jam',
+      description: 'Audit menyeluruh untuk project D',
     },
   ];
 
@@ -97,24 +106,40 @@ export default function HomeScreen() {
     location: 'Menara BCA, Jakarta',
     startTime: '08:00',
     duration: '2 jam 15 menit',
+    status: 'in_progress',
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return '#EF4444';
-      case 'medium': return '#F59E0B';
-      case 'low': return '#10B981';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#FFC107';
+      case 'in_progress': return '#3B82F6';
+      case 'completed': return '#10B981';
+      case 'inactive': return '#9CA3AF';
       default: return '#6B7280';
     }
   };
 
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'Urgent';
-      case 'medium': return 'Normal';
-      case 'low': return 'Rendah';
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Menunggu';
+      case 'in_progress': return 'Berjalan';
+      case 'completed': return 'Selesai';
+      case 'inactive': return 'Tidak Aktif';
       default: return '';
     }
+  };
+
+  const getFilteredTasks = () => {
+    if (selectedFilter === 'Semua') {
+      return availableTasks;
+    }
+    return availableTasks.filter((task) => {
+      if (selectedFilter === 'Menunggu') return task.status === 'pending';
+      if (selectedFilter === 'Berjalan') return task.status === 'in_progress';
+      if (selectedFilter === 'Selesai') return task.status === 'completed';
+      if (selectedFilter === 'Tidak Aktif') return task.status === 'inactive';
+      return true;
+    });
   };
 
   return (
@@ -167,7 +192,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tugas Sedang Dikerjakan</Text>
 
-            <TouchableOpacity style={styles.activeTaskCard}>
+            <TouchableOpacity style={[styles.activeTaskCard, { borderLeftColor: getStatusColor(activeTask.status) }]}>
               <View style={styles.activeTaskHeader}>
                 <View style={styles.activeTaskBadge}>
                   <View style={styles.pulseIndicator} />
@@ -208,48 +233,65 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tugas Tersedia</Text>
-            <TouchableOpacity style={styles.filterButton}>
-              <IconSymbol size={18} name="line.3.horizontal.decrease.circle" color="#1d1d1f" />
-            </TouchableOpacity>
+            
+            {/* Filter Dropdown Button */}
+            <View style={styles.filterDropdownContainerInline}>
+              <TouchableOpacity
+                style={styles.filterDropdownButton}
+                onPress={() => setShowFilterDropdown(!showFilterDropdown)}
+              >
+                <View style={styles.filterDropdownButtonContent}>
+                  <Text style={styles.filterDropdownButtonText}>{selectedFilter}</Text>
+                  <IconSymbol
+                    size={16}
+                    name={showFilterDropdown ? 'chevron.up' : 'chevron.down'}
+                    color="#1d1d1f"
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Filter Tabs */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            <View style={styles.filterTabs}>
-              {['Semua', 'Urgent', 'Normal', 'Rendah'].map((filter) => (
+          {/* Dropdown Menu */}
+          {showFilterDropdown && (
+            <View style={styles.filterDropdownMenu}>
+              {filterOptions.map((option) => (
                 <TouchableOpacity
-                  key={filter}
+                  key={option}
                   style={[
-                    styles.filterTab,
-                    selectedFilter === filter && styles.filterTabActive,
+                    styles.filterDropdownItem,
+                    selectedFilter === option && styles.filterDropdownItemActive,
                   ]}
-                  onPress={() => setSelectedFilter(filter)}
+                  onPress={() => {
+                    setSelectedFilter(option);
+                    setShowFilterDropdown(false);
+                  }}
                 >
                   <Text
                     style={[
-                      styles.filterTabText,
-                      selectedFilter === filter && styles.filterTabTextActive,
+                      styles.filterDropdownItemText,
+                      selectedFilter === option && styles.filterDropdownItemTextActive,
                     ]}
                   >
-                    {filter}
+                    {option}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </ScrollView>
+          )}
 
           {/* Tasks List */}
           <View style={styles.tasksList}>
-            {availableTasks.map((task) => (
+            {getFilteredTasks().map((task) => (
               <TouchableOpacity key={task.id} style={styles.taskCard}>
                 <View style={styles.taskHeader}>
                   <View style={styles.taskHeaderLeft}>
                     <View style={[
                       styles.priorityBadge,
-                      { backgroundColor: getPriorityColor(task.priority) }
+                      { backgroundColor: getStatusColor(task.status) }
                     ]}>
                       <Text style={styles.priorityBadgeText}>
-                        {getPriorityText(task.priority)}
+                        {getStatusText(task.status)}
                       </Text>
                     </View>
                     <Text style={styles.taskId}>{task.id}</Text>
@@ -387,7 +429,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1a1a1a',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.light.yellowAccent,
   },
   quickStatValue: {
     fontSize: 32,
@@ -407,8 +449,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
-    borderWidth: 1,
+    borderWidth: 2,
+    borderLeftWidth: 4,
     borderColor: '#e5e5ea',
+    borderLeftColor: Colors.light.yellow,
   },
   activeTaskHeader: {
     flexDirection: 'row',
@@ -420,7 +464,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f5f5f7',
+    backgroundColor: Colors.light.yellowAccent,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 4,
@@ -482,34 +526,59 @@ const styles = StyleSheet.create({
   filterButton: {
     padding: 8,
   },
-  filterScroll: {
+  filterDropdownContainerInline: {
+    minWidth: 120,
+  },
+  filterDropdownContainer: {
     marginBottom: 16,
     marginHorizontal: -20,
     paddingHorizontal: 20,
   },
-  filterTabs: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 4,
+  filterDropdownButton: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#d2d2d7',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  filterTabActive: {
-    backgroundColor: '#000000',
-    borderColor: '#000000',
+  filterDropdownButtonContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
   },
-  filterTabText: {
+  filterDropdownButtonText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#86868b',
+    color: '#1d1d1f',
   },
-  filterTabTextActive: {
-    color: '#FFFFFF',
+  filterDropdownMenu: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#d2d2d7',
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  filterDropdownItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5ea',
+  },
+  filterDropdownItemActive: {
+    backgroundColor: '#f5f5f7',
+  },
+  filterDropdownItemText: {
+    fontSize: 14,
+    color: '#86868b',
+    fontWeight: '500',
+  },
+  filterDropdownItemTextActive: {
+    color: '#000000',
+    fontWeight: '600',
   },
   tasksList: {
     gap: 12,

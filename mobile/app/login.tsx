@@ -32,6 +32,43 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  // Load saved credentials on mount
+  React.useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+      const savedEmail = await AsyncStorage.getItem('savedEmail');
+      const savedPassword = await AsyncStorage.getItem('savedPassword');
+
+      if (savedRememberMe === 'true' && savedEmail && savedPassword) {
+        setRememberMe(true);
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+      }
+    } catch (error) {
+      console.error('Error loading saved credentials:', error);
+    }
+  };
+
+  const saveCredentials = async () => {
+    try {
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberMe', 'true');
+        await AsyncStorage.setItem('savedEmail', email);
+        await AsyncStorage.setItem('savedPassword', password);
+      } else {
+        await AsyncStorage.removeItem('rememberMe');
+        await AsyncStorage.removeItem('savedEmail');
+        await AsyncStorage.removeItem('savedPassword');
+      }
+    } catch (error) {
+      console.error('Error saving credentials:', error);
+    }
+  };
+
   // Handle focus untuk scroll ke input yang aktif
   const handleInputFocus = (offsetY: number = 0) => {
     setTimeout(() => {
@@ -164,6 +201,9 @@ export default function LoginScreen() {
 
       console.log('Login successful:', response);
 
+      // Save credentials if Remember Me is checked
+      await saveCredentials();
+
       // Navigate ke tabs
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -291,7 +331,20 @@ export default function LoginScreen() {
               <View style={styles.optionsRow}>
                 <TouchableOpacity
                   style={styles.rememberMeContainer}
-                  onPress={() => setRememberMe(!rememberMe)}
+                  onPress={async () => {
+                    const newRememberMe = !rememberMe;
+                    setRememberMe(newRememberMe);
+                    // Clear saved credentials immediately if unchecked
+                    if (!newRememberMe) {
+                      try {
+                        await AsyncStorage.removeItem('rememberMe');
+                        await AsyncStorage.removeItem('savedEmail');
+                        await AsyncStorage.removeItem('savedPassword');
+                      } catch (error) {
+                        console.error('Error clearing credentials:', error);
+                      }
+                    }
+                  }}
                   disabled={isLoading}
                 >
                   <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
