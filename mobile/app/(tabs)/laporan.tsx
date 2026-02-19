@@ -157,9 +157,31 @@ export default function LaporanScreen() {
           </View>
 
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#1d1d1f" />
-              <Text style={styles.loadingText}>Memuat laporan...</Text>
+            <View style={styles.reportsList}>
+              {[1, 2, 3, 4].map((i) => (
+                <View key={i} style={styles.reportCard}>
+                  {/* Header Skeleton */}
+                  <View style={styles.reportHeader}>
+                    <View style={styles.reportHeaderLeft}>
+                      <View style={[styles.skeleton, styles.skeletonDot]} />
+                      <View style={[styles.skeleton, styles.skeletonTicket]} />
+                    </View>
+                    <View style={[styles.skeleton, styles.skeletonBadge]} />
+                  </View>
+
+                  {/* Title Skeleton */}
+                  <View style={[styles.skeleton, styles.skeletonTitle]} />
+
+                  {/* Description Skeleton */}
+                  <View style={[styles.skeleton, styles.skeletonDescLine]} />
+                  <View style={[styles.skeleton, styles.skeletonDescLineShort]} />
+
+                  {/* Meta Skeleton */}
+                  <View style={styles.reportMeta}>
+                    <View style={[styles.skeleton, styles.skeletonMeta]} />
+                  </View>
+                </View>
+              ))}
             </View>
           ) : reports.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -511,5 +533,48 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     color: '#86868b',
+  },
+  // Skeleton Styles
+  skeleton: {
+    backgroundColor: '#E5E7EB',
+    overflow: 'hidden',
+  },
+  skeletonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  skeletonTicket: {
+    width: 100,
+    height: 14,
+    borderRadius: 4,
+  },
+  skeletonBadge: {
+    width: 60,
+    height: 20,
+    borderRadius: 4,
+  },
+  skeletonTitle: {
+    width: '80%',
+    height: 20,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonDescLine: {
+    width: '100%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonDescLineShort: {
+    width: '60%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonMeta: {
+    width: 150,
+    height: 14,
+    borderRadius: 4,
   },
 });

@@ -54,6 +54,7 @@ export default function ReportDetailScreen() {
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [loadingPhotos, setLoadingPhotos] = useState<Record<string, boolean>>({});
 
   // Load draft on mount for new reports
   useEffect(() => {
@@ -609,15 +610,63 @@ export default function ReportDetailScreen() {
         </View>
       )}
 
-      {/* Loading Indicator */}
-      {isLoadingReport && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0F766E" />
-          <Text style={styles.loadingText}>Memuat detail laporan...</Text>
-        </View>
-      )}
+      {/* Loading Skeleton */}
+      {isLoadingReport ? (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Report Card Skeleton */}
+          <View style={styles.section}>
+            <View style={styles.reportCard}>
+              <View style={styles.skeletonRow}>
+                <View style={[styles.skeleton, styles.skeletonBadge]} />
+                <View style={[styles.skeleton, styles.skeletonTicket]} />
+              </View>
+              <View style={[styles.skeleton, styles.skeletonTitle]} />
+              <View style={styles.skeletonMetaRow}>
+                <View style={[styles.skeleton, styles.skeletonMeta]} />
+                <View style={[styles.skeleton, styles.skeletonMeta]} />
+              </View>
+            </View>
+          </View>
 
-      {!isLoadingReport && (
+          {/* Team Skeleton */}
+          <View style={styles.section}>
+            <View style={[styles.skeleton, styles.skeletonSectionTitle]} />
+            <View style={styles.teamContainer}>
+              {[1, 2, 3].map((i) => (
+                <View key={i} style={styles.teamMemberCard}>
+                  <View style={[styles.skeleton, styles.skeletonAvatar]} />
+                  <View style={styles.teamMemberInfo}>
+                    <View style={[styles.skeleton, styles.skeletonTeamName]} />
+                    <View style={[styles.skeleton, styles.skeletonTeamPosition]} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Description Skeleton */}
+          <View style={styles.section}>
+            <View style={[styles.skeleton, styles.skeletonSectionTitle]} />
+            <View style={styles.descriptionCard}>
+              <View style={[styles.skeleton, styles.skeletonTextLine]} />
+              <View style={[styles.skeleton, styles.skeletonTextLine]} />
+              <View style={[styles.skeleton, styles.skeletonTextLineShort]} />
+            </View>
+          </View>
+
+          {/* Photos Skeleton */}
+          <View style={styles.section}>
+            <View style={[styles.skeleton, styles.skeletonSectionTitle]} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.photosGrid}>
+                {[1, 2, 3].map((i) => (
+                  <View key={i} style={[styles.skeleton, styles.skeletonPhoto]} />
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </ScrollView>
+      ) : (
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Report Info Card */}
           <View style={styles.section}>
@@ -769,13 +818,23 @@ export default function ReportDetailScreen() {
                   {/* Existing Photos */}
                   {photos.map((photo) => (
                     <View key={photo.id} style={styles.photoItem}>
+                      {loadingPhotos[photo.id] && (
+                        <View style={[styles.skeleton, styles.skeletonPhotoLoading]} />
+                      )}
                       <Image
                         source={{ uri: photo.uri }}
                         style={styles.photoImage}
-                        onLoad={() => console.log('✅ Image loaded:', photo.uri)}
+                        onLoadStart={() => {
+                          setLoadingPhotos(prev => ({ ...prev, [photo.id]: true }));
+                        }}
+                        onLoad={() => {
+                          console.log('✅ Image loaded:', photo.uri);
+                          setLoadingPhotos(prev => ({ ...prev, [photo.id]: false }));
+                        }}
                         onError={(e) => {
                           console.error('❌ Image failed to load:', photo.uri);
                           console.error('Error details:', e.nativeEvent.error);
+                          setLoadingPhotos(prev => ({ ...prev, [photo.id]: false }));
                         }}
                         resizeMode="cover"
                       />
@@ -1179,6 +1238,89 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Skeleton Styles
+  skeleton: {
+    backgroundColor: '#E5E7EB',
+    overflow: 'hidden',
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  skeletonBadge: {
+    width: 80,
+    height: 20,
+    borderRadius: 4,
+  },
+  skeletonTicket: {
+    width: 100,
+    height: 16,
+    borderRadius: 4,
+  },
+  skeletonTitle: {
+    width: '80%',
+    height: 24,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  skeletonMetaRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  skeletonMeta: {
+    width: 100,
+    height: 16,
+    borderRadius: 4,
+  },
+  skeletonSectionTitle: {
+    width: 120,
+    height: 18,
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  skeletonTeamName: {
+    width: 120,
+    height: 16,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonTeamPosition: {
+    width: 80,
+    height: 12,
+    borderRadius: 4,
+  },
+  skeletonTextLine: {
+    width: '100%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonTextLineShort: {
+    width: '60%',
+    height: 14,
+    borderRadius: 4,
+  },
+  skeletonPhoto: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
+  },
+  skeletonPhotoLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
+    zIndex: 1,
   },
   locationCountBadge: {
     flexDirection: 'row',

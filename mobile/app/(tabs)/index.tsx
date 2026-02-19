@@ -283,9 +283,36 @@ export default function HomeScreen() {
 
           {/* Tasks List */}
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#000000" />
-              <Text style={styles.loadingText}>Loading tasks...</Text>
+            <View style={styles.tasksList}>
+              {[1, 2, 3, 4].map((i) => (
+                <View key={i} style={styles.taskCard}>
+                  {/* Header Skeleton */}
+                  <View style={styles.taskHeader}>
+                    <View style={styles.taskHeaderLeft}>
+                      <View style={[styles.skeleton, styles.skeletonBadge]} />
+                      <View style={[styles.skeleton, styles.skeletonTaskId]} />
+                    </View>
+                  </View>
+
+                  {/* Title Skeleton */}
+                  <View style={[styles.skeleton, styles.skeletonTaskTitle]} />
+
+                  {/* Description Skeleton */}
+                  <View style={[styles.skeleton, styles.skeletonDescLine]} />
+                  <View style={[styles.skeleton, styles.skeletonDescLineShort]} />
+
+                  {/* Meta Skeleton */}
+                  <View style={styles.taskMeta}>
+                    <View style={[styles.skeleton, styles.skeletonMetaItem]} />
+                    <View style={[styles.skeleton, styles.skeletonMetaItem]} />
+                  </View>
+
+                  {/* Footer Skeleton */}
+                  <View style={styles.taskFooter}>
+                    <View style={[styles.skeleton, styles.skeletonButton]} />
+                  </View>
+                </View>
+              ))}
             </View>
           ) : getFilteredTasks().length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -797,5 +824,48 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#6B7280',
     fontWeight: '500',
+  },
+  // Skeleton Styles
+  skeleton: {
+    backgroundColor: '#E5E7EB',
+    overflow: 'hidden',
+  },
+  skeletonBadge: {
+    width: 70,
+    height: 20,
+    borderRadius: 4,
+  },
+  skeletonTaskId: {
+    width: 80,
+    height: 14,
+    borderRadius: 4,
+  },
+  skeletonTaskTitle: {
+    width: '85%',
+    height: 20,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonDescLine: {
+    width: '100%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonDescLineShort: {
+    width: '65%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 10,
+  },
+  skeletonMetaItem: {
+    width: 120,
+    height: 14,
+    borderRadius: 4,
+  },
+  skeletonButton: {
+    width: '100%',
+    height: 36,
+    borderRadius: 8,
   },
 });
