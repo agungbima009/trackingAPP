@@ -381,6 +381,95 @@ GET /api/admin/users
 
 ---
 
+### Create New User
+```http
+POST /api/admin/users
+```
+
+**Headers:**
+```
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token>
+```
+
+**Permissions:** `Admin` or `Superadmin` role required
+
+**Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "role": "employee",
+  "phone_number": "+1234567890",
+  "department": "IT",
+  "position": "Software Engineer",
+  "address": "123 Main St, City, State",
+  "status": "active"
+}
+```
+
+**Body Parameters:**
+- `name` (required): User's full name
+- `email` (required): User's email address (must be unique)
+- `password` (required): User's password (minimum 8 characters)
+- `password_confirmation` (required): Password confirmation (must match password)
+- `role` (required): User role - one of: `employee`, `admin`, `superadmin`
+- `phone_number` (optional): User's phone number
+- `department` (optional): User's department
+- `position` (optional): User's job position
+- `address` (optional): User's address
+- `status` (optional): User status - `active` or `inactive` (default: `active`)
+
+**Response (201):**
+```json
+{
+  "message": "User created successfully",
+  "user": {
+    "id": "uuid-here",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone_number": "+1234567890",
+    "department": "IT",
+    "position": "Software Engineer",
+    "address": "123 Main St, City, State",
+    "status": "active",
+    "roles": [
+      {
+        "id": 3,
+        "name": "employee"
+      }
+    ],
+    "permissions": [],
+    "created_at": "2026-02-18T10:00:00.000000Z"
+  }
+}
+```
+
+**Error Responses:**
+
+**Validation Error (422):**
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": ["The email has already been taken."],
+    "password": ["The password must be at least 6 characters."]
+  }
+}
+```
+
+**Unauthorized (403):**
+```json
+{
+  "message": "Forbidden"
+}
+```
+
+---
+
 ### Get User Details
 ```http
 GET /api/admin/users/{id}
@@ -414,6 +503,13 @@ GET /api/admin/users/{id}
 PUT /api/profile/{id}
 ```
 
+**Headers:**
+```
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token>
+```
+
 **Body:**
 ```json
 {
@@ -421,9 +517,21 @@ PUT /api/profile/{id}
   "phone_number": "+1234567893",
   "department": "Sales",
   "position": "Senior Sales Representative",
-  "address": "321 Field Road, Sales Town, ST 45678"
+  "address": "321 Field Road, Sales Town, ST 45678",
+  "password": "newpassword123",
+  "password_confirmation": "newpassword123"
 }
 ```
+
+**Body Parameters:**
+- `name` (optional): User's full name
+- `email` (optional): User's email address
+- `phone_number` (optional): User's phone number
+- `department` (optional): User's department
+- `position` (optional): User's job position
+- `address` (optional): User's address
+- `password` (optional): New password (minimum 8 characters, omit to keep current password)
+- `password_confirmation` (required if password provided): Password confirmation
 
 **Response (200):**
 ```json
@@ -2114,6 +2222,7 @@ For issues or questions, please refer to:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/admin/users` | Get all users |
+| POST | `/api/admin/users` | Create new user |
 | GET | `/api/admin/users/{id}` | Get user details |
 | PUT | `/api/profile/{id}` | Update user profile |
 | PUT | `/api/admin/users/{id}/status` | Update user status |

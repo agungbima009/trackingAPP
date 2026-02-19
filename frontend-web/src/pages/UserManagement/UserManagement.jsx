@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, getUserDetails, updateUserProfile, updateUserStatus, deleteUser, getDepartments } from '../../services/api';
+import { getUsers, getUserDetails, createUser, updateUserProfile, updateUserStatus, deleteUser, getDepartments } from '../../services/api';
 import './UserManagement.css';
 
 function UserManagement() {
@@ -16,11 +16,14 @@ function UserManagement() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
+    password_confirmation: '',
     phone_number: '',
     department: '',
     position: '',
     address: '',
-    status: 'active'
+    status: 'active',
+    role: 'employee'
   });
 
   const [filters, setFilters] = useState({
@@ -94,11 +97,14 @@ function UserManagement() {
     setFormData({
       name: '',
       email: '',
+      password: '',
+      password_confirmation: '',
       phone_number: '',
       department: '',
       position: '',
       address: '',
-      status: 'active'
+      status: 'active',
+      role: 'employee'
     });
   };
 
@@ -143,15 +149,34 @@ function UserManagement() {
     e.preventDefault();
     setError('');
 
+    // Validate password confirmation
+    if (formData.password && formData.password !== formData.password_confirmation) {
+      showToast('Password and confirmation do not match', 'error');
+      return;
+    }
+
+    // Validate password length if provided
+    if (formData.password && formData.password.length < 8) {
+      showToast('Password must be at least 8 characters', 'error');
+      return;
+    }
+
     try {
       if (editMode && currentUserId) {
         // Update existing user
-        await updateUserProfile(currentUserId, formData);
+        // Only include password if it's filled
+        const updateData = { ...formData };
+        if (!updateData.password) {
+          delete updateData.password;
+          delete updateData.password_confirmation;
+        }
+        await updateUserProfile(currentUserId, updateData);
         showToast('User updated successfully!', 'success');
       } else {
-        // Note: Create user functionality would require a different endpoint
-        // For now, we'll show a message
-        showToast('Create user functionality requires admin registration endpoint', 'info');
+        // Create new user
+        const response = await createUser(formData);
+        console.log('User created successfully:', response);
+        showToast('User created successfully!', 'success');
       }
 
       setShowModal(false);
@@ -159,7 +184,9 @@ function UserManagement() {
       loadUsers();
     } catch (err) {
       console.error('Error saving user:', err);
-      setError(err.response?.data?.message || 'Failed to save user. Please try again.');
+      console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to save user. Please try again.';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -172,6 +199,8 @@ function UserManagement() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
+        password: '',
+        password_confirmation: '',
         phone_number: user.phone_number || '',
         department: user.department || '',
         position: user.position || '',
@@ -515,6 +544,90 @@ function UserManagement() {
                   />
                 </div>
               </div>
+
+              {!editMode && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="password">Password *</label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required={!editMode}
+                      placeholder="Enter password"
+                      minLength="8"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="password_confirmation">Confirm Password *</label>
+                    <input
+                      type="password"
+                      id="password_confirmation"
+                      name="password_confirmation"
+                      value={formData.password_confirmation}
+                      onChange={handleInputChange}
+                      required={!editMode}
+                      placeholder="Confirm password"
+                      minLength="8"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!editMode && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="role">Role *</label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      required={!editMode}
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="admin">Admin</option>
+                      <option value="superadmin">Superadmin</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                  </div>
+                </div>
+              )}
+
+              {editMode && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="password">New Password {editMode && '(Optional)'}</label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Leave blank to keep current password"
+                      minLength="8"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="password_confirmation">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="password_confirmation"
+                      name="password_confirmation"
+                      value={formData.password_confirmation}
+                      onChange={handleInputChange}
+                      placeholder="Confirm new password"
+                      minLength="8"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="form-row">
                 <div className="form-group">

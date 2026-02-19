@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -47,6 +48,77 @@ class UserController extends Controller
         $users = $query->paginate($request->get('per_page', 15));
 
         return response()->json($users);
+    }
+
+    /**
+     * Create a new user (Admin/Superadmin only)
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|string|in:employee,admin,superadmin',
+            'phone_number' => 'nullable|string|max:20',
+            'department' => 'nullable|string|max:100',
+            'position' => 'nullable|string|max:100',
+            'address' => 'nullable|string',
+            'status' => 'nullable|in:active,inactive'
+        ]);
+
+        try {
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone_number' => $request->phone_number,
+                'department' => $request->department,
+                'position' => $request->position,
+                'address' => $request->address,
+                'status' => $request->status ?? 'active'
+            ]);
+
+            // Assign role with explicit guard
+            $roleName = $request->role;
+            
+            // Verify role exists
+            $role = \Spatie\Permission\Models\Role::where('name', $roleName)
+                ->where('guard_name', 'web')
+                ->first();
+            
+            if (!$role) {
+                // Create role if it doesn't exist
+                $role = \Spatie\Permission\Models\Role::create([
+                    'name' => $roleName,
+                    'guard_name' => 'web'
+                ]);
+            }
+            
+            // Assign role to user
+            $user->assignRole($role);
+            
+            // Clear permission cache
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            
+            // Reload user with relationships
+            $user->load('roles', 'permissions');
+
+            return response()->json([
+                'message' => 'User created successfully',
+                'user' => $user
+            ], 201);
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error creating user: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'message' => 'Failed to create user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
