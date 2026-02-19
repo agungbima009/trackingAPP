@@ -77,14 +77,18 @@ class ReportController extends Controller
     {
         $report = ReportModel::with([
             'user:id,name,email,department,position',
-            'takenTask.task:task_id,title,description,location',
-            'takenTask.users:id,name'
+            'takenTask.task:task_id,title,description,location'
         ])->find($id);
 
         if (!$report) {
             return response()->json([
                 'message' => 'Report not found'
             ], 404);
+        }
+
+        // Add assigned users to the taken task
+        if ($report->takenTask) {
+            $report->takenTask->users = $report->takenTask->getUsers();
         }
 
         return response()->json([

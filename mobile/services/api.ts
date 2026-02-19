@@ -249,7 +249,7 @@ export const tasksAPI = {
   // Get task assignment details with team members
   getTakenTaskDetail: async (takenTaskId: string): Promise<any> => {
     try {
-      const response = await api.get(`/admin/assignments/${takenTaskId}`);
+      const response = await api.get(`/my-tasks/${takenTaskId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch task assignment');

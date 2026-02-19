@@ -358,6 +358,45 @@ class TakenTaskController extends Controller
     }
 
     /**
+     * Get specific task assignment detail (for user's own assignments)
+     */
+    public function getMyTaskDetail(Request $request, $id)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+
+        $assignment = TakenTaskModel::with(['task'])->findOrFail($id);
+
+        // Check if user is assigned to this task or is admin
+        $isAssigned = $assignment->hasUser($user->id);
+        $isAdmin = $user->hasAnyRole(['admin', 'superadmin']);
+
+        if (!$isAssigned && !$isAdmin) {
+            return response()->json([
+                'message' => 'User does not have the right roles.'
+            ], 403);
+        }
+
+        // Get assigned users
+        $assignment->assigned_users = $assignment->getUsers();
+
+        // Calculate duration if both start and end time exist
+        $duration = null;
+        if ($assignment->start_time && $assignment->end_time) {
+            $duration = $assignment->start_time->diffInMinutes($assignment->end_time);
+        }
+
+        return response()->json([
+            'assignment' => $assignment,
+            'duration_minutes' => $duration
+        ]);
+    }
+
+    /**
      * Get assignment statistics for a user
      */
     public function userStatistics($userId)

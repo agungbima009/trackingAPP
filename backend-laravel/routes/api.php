@@ -109,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('my-tasks')->group(function () {
         Route::get('/', [TakenTaskController::class, 'myTasks']);
         Route::get('/statistics', [TakenTaskController::class, 'myStatistics']);
+        Route::get('/{id}', [TakenTaskController::class, 'getMyTaskDetail']);
         Route::put('/{id}/start', [TakenTaskController::class, 'startTask']);
         Route::put('/{id}/complete', [TakenTaskController::class, 'completeTask']);
     });

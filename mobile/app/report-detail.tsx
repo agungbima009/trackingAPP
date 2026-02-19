@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { reportsAPI, tasksAPI } from '@/services/api';
+import { API_BASE_URL } from '@/config/api.config';
 
 interface LocationPoint {
   id: string;
@@ -50,20 +51,26 @@ export default function ReportDetailScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [reportData, setReportData] = useState<any>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   // Load draft on mount for new reports
   useEffect(() => {
     if (isNewReport && taskData?.taskId) {
       loadDraft();
+    } else if (!isNewReport && params.reportId) {
+      // Load existing report from API (includes team members)
+      loadReportDetails();
     }
-  }, []);
+  }, [params.reportId]);
 
-  // Load team members for the taken task
+  // Load team members for NEW reports only (from taken task)
   useEffect(() => {
-    if (params.takenTaskId && typeof params.takenTaskId === 'string') {
+    if (isNewReport && params.takenTaskId && typeof params.takenTaskId === 'string') {
       loadTeamMembers();
     }
-  }, [params.takenTaskId]);
+  }, [params.takenTaskId, isNewReport]);
 
   const loadDraft = async () => {
     try {
@@ -79,6 +86,70 @@ export default function ReportDetailScreen() {
       }
     } catch (error) {
       console.error('Error loading draft:', error);
+    }
+  };
+
+  const loadReportDetails = async () => {
+    try {
+      setIsLoadingReport(true);
+      const reportId = params.reportId as string;
+      console.log('Loading report details for ID:', reportId);
+      
+      const response = await reportsAPI.getReportDetails(reportId);
+      console.log('Report response:', JSON.stringify(response, null, 2));
+
+      if (response.report) {
+        const report = response.report;
+        setReportData(report);
+        setReportDescription(report.report || '');
+        setIsReadOnly(true);
+        setIsEditingDescription(false);
+
+        console.log('Report data loaded:', {
+          id: report.report_id,
+          title: report.takenTask?.task?.title,
+          hasImages: !!report.image,
+          hasTeam: !!report.takenTask?.users,
+        });
+
+        // Parse photos from image array
+        if (report.image && typeof report.image === 'string') {
+          try {
+            const imageArray = JSON.parse(report.image);
+            if (Array.isArray(imageArray)) {
+              // Get base URL without /api suffix
+              const baseUrl = API_BASE_URL.replace('/api', '');
+              const photosList = imageArray.map((imgPath: string, index: number) => {
+                // Construct full URL for image
+                const fullImageUrl = imgPath.startsWith('http') 
+                  ? imgPath 
+                  : `${baseUrl}/storage/${imgPath}`;
+                console.log('Photo URL:', fullImageUrl);
+                return {
+                  id: `${index}`,
+                  uri: fullImageUrl,
+                  name: `photo_${index + 1}`,
+                };
+              });
+              setPhotos(photosList);
+              console.log(`Loaded ${photosList.length} photos`);
+            }
+          } catch (error) {
+            console.error('Error parsing images:', error);
+          }
+        }
+
+        // Load team members from the taken task
+        if (report.takenTask?.users && Array.isArray(report.takenTask.users)) {
+          setTeamMembers(report.takenTask.users);
+          console.log(`Loaded ${report.takenTask.users.length} team members`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading report details:', error);
+      Alert.alert('Error', 'Gagal memuat detail laporan');
+    } finally {
+      setIsLoadingReport(false);
     }
   };
 
@@ -155,8 +226,51 @@ export default function ReportDetailScreen() {
     );
   };
 
-  // Report data - use task data if available for new reports
-  const report = isNewReport && taskData ? {
+  // Report data - use loaded data, task data for new reports, or fallback to mock data
+  const report = reportData ? {
+    id: reportData.report_id,
+    ticket_number: reportData.ticket_number || 'N/A',
+    taskId: reportData.taken_task_id || 'N/A',
+    title: reportData.takenTask?.task?.title || 'Laporan',
+    location: reportData.takenTask?.task?.location || '',
+    description: reportData.takenTask?.task?.description || '',
+    date: new Date(reportData.created_at).toLocaleDateString('id-ID', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    }),
+    time: new Date(reportData.created_at).toLocaleTimeString('id-ID', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }),
+    status: 'completed',
+    startTime: reportData.takenTask?.start_time 
+      ? new Date(reportData.takenTask.start_time).toLocaleTimeString('id-ID', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }) 
+      : '-',
+    endTime: reportData.takenTask?.end_time 
+      ? new Date(reportData.takenTask.end_time).toLocaleTimeString('id-ID', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }) 
+      : '-',
+    duration: reportData.takenTask?.end_time && reportData.takenTask?.start_time 
+      ? (() => {
+          const start = new Date(reportData.takenTask.start_time);
+          const end = new Date(reportData.takenTask.end_time);
+          const diffMs = end.getTime() - start.getTime();
+          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          return `${diffHours}j ${diffMinutes}m`;
+        })()
+      : '-',
+    hasPhoto: photos.length > 0,
+    user: reportData.user,
+    reportDescription: reportData.report || '',
+    createdAt: reportData.created_at,
+  } : isNewReport && taskData ? {
     id: 'NEW',
     ticket_number: 'RPT-PENDING',
     taskId: taskData.taskId,
@@ -478,9 +592,18 @@ export default function ReportDetailScreen() {
         </View>
       )}
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Report Info Card */}
-        <View style={styles.section}>
+      {/* Loading Indicator */}
+      {isLoadingReport && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0F766E" />
+          <Text style={styles.loadingText}>Memuat detail laporan...</Text>
+        </View>
+      )}
+
+      {!isLoadingReport && (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Report Info Card */}
+          <View style={styles.section}>
           <View style={styles.reportCard}>
             <View style={styles.reportHeader}>
               <View style={styles.reportHeaderLeft}>
@@ -506,13 +629,21 @@ export default function ReportDetailScreen() {
               <View style={styles.reportMetaItem}>
                 <IconSymbol size={14} name="clock.fill" color="#86868b" />
                 <Text style={styles.reportMetaText}>
-                  {report.startTime} - {report.endTime} ({report.duration})
+                  {report.startTime} - {report.endTime}
                 </Text>
               </View>
-              <View style={styles.reportMetaItem}>
-                <IconSymbol size={14} name="list.bullet" color="#86868b" />
-                <Text style={styles.reportMetaText}>Task: {report.taskId}</Text>
-              </View>
+              {report.duration && report.duration !== '-' && (
+                <View style={styles.reportMetaItem}>
+                  <IconSymbol size={14} name="timer" color="#86868b" />
+                  <Text style={styles.reportMetaText}>Durasi: {report.duration}</Text>
+                </View>
+              )}
+              {report.location && (
+                <View style={styles.reportMetaItem}>
+                  <IconSymbol size={14} name="location.fill" color="#86868b" />
+                  <Text style={styles.reportMetaText}>{report.location}</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -547,7 +678,7 @@ export default function ReportDetailScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
-            {!isNewReport && (
+            {!isNewReport && !isReadOnly && (
               <TouchableOpacity
                 onPress={() => {
                   if (isEditingDescription) {
@@ -600,15 +731,17 @@ export default function ReportDetailScreen() {
 
           {photos.length === 0 ? (
             // Tampilkan tombol tambah foto ketika tidak ada foto
-            <TouchableOpacity
-              style={styles.photoItem}
-              onPress={() => setShowPhotoOptions(true)}
-            >
-              <View style={styles.uploadPhotoPlaceholder}>
-                <IconSymbol size={28} name="plus" color="#1d1d1f" />
-                <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
-              </View>
-            </TouchableOpacity>
+            !isReadOnly && (
+              <TouchableOpacity
+                style={styles.photoItem}
+                onPress={() => setShowPhotoOptions(true)}
+              >
+                <View style={styles.uploadPhotoPlaceholder}>
+                  <IconSymbol size={28} name="plus" color="#1d1d1f" />
+                  <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+                </View>
+              </TouchableOpacity>
+            )
           ) : (
             // Tampilkan galeri foto dengan tombol tambah di akhir
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -620,25 +753,29 @@ export default function ReportDetailScreen() {
                       source={{ uri: photo.uri }}
                       style={styles.photoImage}
                     />
-                    <TouchableOpacity
-                      style={styles.photoDeleteButton}
-                      onPress={() => handleRemovePhoto(photo.id)}
-                    >
-                      <IconSymbol size={14} name="xmark" color="#FFFFFF" />
-                    </TouchableOpacity>
+                    {!isReadOnly && (
+                      <TouchableOpacity
+                        style={styles.photoDeleteButton}
+                        onPress={() => handleRemovePhoto(photo.id)}
+                      >
+                        <IconSymbol size={14} name="xmark" color="#FFFFFF" />
+                      </TouchableOpacity>
+                    )}
                   </View>
                 ))}
 
                 {/* Upload Photo Button */}
-                <TouchableOpacity
-                  style={styles.photoItem}
-                  onPress={() => setShowPhotoOptions(true)}
-                >
-                  <View style={styles.uploadPhotoPlaceholder}>
-                    <IconSymbol size={28} name="plus" color="#1d1d1f" />
-                    <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
-                  </View>
-                </TouchableOpacity>
+                {!isReadOnly && (
+                  <TouchableOpacity
+                    style={styles.photoItem}
+                    onPress={() => setShowPhotoOptions(true)}
+                  >
+                    <View style={styles.uploadPhotoPlaceholder}>
+                      <IconSymbol size={28} name="plus" color="#1d1d1f" />
+                      <Text style={styles.uploadPhotoText}>Tambah Foto</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
             </ScrollView>
           )}
@@ -719,6 +856,7 @@ export default function ReportDetailScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+      )}
 
       {/* Photo Upload Options Modal */}
       <Modal
@@ -786,6 +924,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f7',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   header: {
     flexDirection: 'row',
