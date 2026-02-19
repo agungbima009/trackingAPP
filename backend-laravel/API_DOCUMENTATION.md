@@ -2200,6 +2200,163 @@ For issues or questions, please refer to:
 
 ---
 
+## 🎫 Ticketing System
+
+### Overview
+
+The ticketing system provides unified access to tickets across all entities:
+- **Tasks** - TSK-XXXXXX (e.g., TSK-000001)
+- **Taken Tasks** - TT-XXXXXX (e.g., TT-000001)
+- **Reports** - RPT-XXXXXX (e.g., RPT-000001)
+
+Each ticket is automatically assigned a unique ticket number when created, making it easy to track and reference items across the system.
+
+### Features
+
+- **Auto-generated ticket numbers** for easy identification
+- **Unified ticket searching** across all entity types
+- **Ticket statistics** showing overview of all tickets
+- **Type-specific filtering** to view tickets by entity type
+- **Full-text search** across ticket numbers and titles
+
+### Get All Tickets
+
+```http
+GET /api/tickets
+```
+
+**Query Parameters:**
+- `type` (optional): Filter by type - 'task', 'taken_task', 'report'
+- `search` (optional): Search by ticket number or title
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 15)
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "type": "task",
+      "id": "uuid-here",
+      "ticket_number": "TSK-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T10:00:00.000000Z",
+      "url": "/api/admin/tasks/uuid-here"
+    },
+    {
+      "type": "taken_task",
+      "id": "uuid-here",
+      "ticket_number": "TT-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T10:30:00.000000Z",
+      "url": "/api/admin/assignments/uuid-here"
+    },
+    {
+      "type": "report",
+      "id": "uuid-here",
+      "ticket_number": "RPT-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T14:00:00.000000Z",
+      "url": "/api/reports/uuid-here"
+    }
+  ],
+  "total": 50,
+  "per_page": 15,
+  "current_page": 1,
+  "last_page": 4
+}
+```
+
+---
+
+### Get Ticket by Ticket Number
+
+```http
+GET /api/tickets/number/{ticketNumber}
+```
+
+**Parameters:**
+- `ticketNumber` (required): The ticket number (e.g., TSK-000001, TT-000001, RPT-000001)
+
+**Response (200):**
+```json
+{
+  "type": "task",
+  "entity": {
+    "task_id": "uuid-here",
+    "ticket_number": "TSK-000001",
+    "title": "Client Meeting - Downtown Office",
+    "description": "Meet with potential client",
+    "location": "123 Business Plaza",
+    "status": "active",
+    "created_at": "2026-02-19T10:00:00.000000Z"
+  }
+}
+```
+
+---
+
+### Search Tickets
+
+```http
+GET /api/tickets/search?q=meeting
+```
+
+**Query Parameters:**
+- `q` (required): Search query (minimum 2 characters)
+
+**Response (200):**
+```json
+{
+  "results": [
+    {
+      "type": "task",
+      "ticket_number": "TSK-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T10:00:00.000000Z"
+    },
+    {
+      "type": "taken_task",
+      "ticket_number": "TT-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T10:30:00.000000Z"
+    },
+    {
+      "type": "report",
+      "ticket_number": "RPT-000001",
+      "title": "Client Meeting - Downtown Office",
+      "created_at": "2026-02-19T14:00:00.000000Z"
+    }
+  ],
+  "total": 3
+}
+```
+
+---
+
+### Get Ticket Statistics
+
+```http
+GET /api/tickets/statistics
+```
+
+**Response (200):**
+```json
+{
+  "statistics": {
+    "total_tasks": 15,
+    "total_taken_tasks": 25,
+    "total_reports": 10,
+    "tasks_with_tickets": 15,
+    "taken_tasks_with_tickets": 25,
+    "reports_with_tickets": 10,
+    "user_reports": 5
+  }
+}
+```
+
+---
+
 ## Quick Reference - All Endpoints
 
 ### Public Routes

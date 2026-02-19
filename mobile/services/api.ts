@@ -245,6 +245,16 @@ export const tasksAPI = {
       throw new Error(error.response?.data?.message || 'Failed to fetch statistics');
     }
   },
+
+  // Get task assignment details with team members
+  getTakenTaskDetail: async (takenTaskId: string): Promise<any> => {
+    try {
+      const response = await api.get(`/admin/assignments/${takenTaskId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch task assignment');
+    }
+  },
 };
 
 // Location Tracking API calls

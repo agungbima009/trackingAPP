@@ -7,6 +7,7 @@ use App\Http\Controllers\API\TaskController;
 use App\Http\Controllers\API\TakenTaskController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\ReportController;
+use App\Http\Controllers\API\TicketingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -152,6 +153,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tasks/{taskId}', [ReportController::class, 'taskReports']); // Get reports for specific task
         Route::get('/statistics', [ReportController::class, 'statistics']); // Get overall statistics
         Route::delete('/{id}', [ReportController::class, 'destroy']); // Delete report
+    });
+
+    // Ticketing Routes - Available to all authenticated users
+    Route::prefix('tickets')->group(function () {
+        Route::get('/', [TicketingController::class, 'index']); // Get all tickets with filters
+        Route::get('/number/{ticketNumber}', [TicketingController::class, 'getByTicketNumber']); // Get ticket by number
+        Route::get('/search', [TicketingController::class, 'search']); // Search tickets
+        Route::get('/statistics', [TicketingController::class, 'statistics']); // Get ticket statistics
     });
 
     // Add your other protected routes here

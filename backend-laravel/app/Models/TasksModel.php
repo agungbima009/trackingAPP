@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\GeneratesTickets;
 
 class TasksModel extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, GeneratesTickets;
 
     protected $table = 'tasks';
     protected $primaryKey = 'task_id';
+    protected $ticketPrefix = 'TSK';
 
     protected $fillable = [
         'title',
@@ -21,6 +23,7 @@ class TasksModel extends Model
         'start_time',
         'end_time',
         'manual_override',
+        'ticket_number',
     ];
 
     protected $casts = [
@@ -28,6 +31,18 @@ class TasksModel extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Boot method to auto-generate ticket numbers
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->generateTicketNumber();
+        });
+    }
 
     /**
      * Get all task assignments

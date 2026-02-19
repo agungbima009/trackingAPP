@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { reportsAPI } from '@/services/api';
+import { reportsAPI, tasksAPI } from '@/services/api';
 
 interface LocationPoint {
   id: string;
@@ -48,6 +48,8 @@ export default function ReportDetailScreen() {
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
 
   // Load draft on mount for new reports
   useEffect(() => {
@@ -55,6 +57,13 @@ export default function ReportDetailScreen() {
       loadDraft();
     }
   }, []);
+
+  // Load team members for the taken task
+  useEffect(() => {
+    if (params.takenTaskId && typeof params.takenTaskId === 'string') {
+      loadTeamMembers();
+    }
+  }, [params.takenTaskId]);
 
   const loadDraft = async () => {
     try {
@@ -73,6 +82,22 @@ export default function ReportDetailScreen() {
     }
   };
 
+  const loadTeamMembers = async () => {
+    try {
+      setIsLoadingTeam(true);
+      const takenTaskId = params.takenTaskId as string;
+      const response = await tasksAPI.getTakenTaskDetail(takenTaskId);
+
+      if (response.assignment && response.assignment.assigned_users) {
+        setTeamMembers(response.assignment.assigned_users);
+      }
+    } catch (error) {
+      console.error('Error loading team members:', error);
+    } finally {
+      setIsLoadingTeam(false);
+    }
+  };
+
   // Helper function to convert image to base64
   const convertImageToBase64 = async (uri: string): Promise<string> => {
     try {
@@ -88,6 +113,18 @@ export default function ReportDetailScreen() {
     } catch (error) {
       console.error('Error converting image to base64:', error);
       throw error;
+    }
+  };
+
+  // Complete the task after successful report submission
+  const completeTask = async (takenTaskId: string) => {
+    try {
+      await tasksAPI.completeTask(takenTaskId);
+      console.log('Task marked as completed');
+      return true;
+    } catch (error: any) {
+      console.error('Error completing task:', error);
+      return false;
     }
   };
 
@@ -121,6 +158,7 @@ export default function ReportDetailScreen() {
   // Report data - use task data if available for new reports
   const report = isNewReport && taskData ? {
     id: 'NEW',
+    ticket_number: 'RPT-PENDING',
     taskId: taskData.taskId,
     title: taskData.taskTitle || 'Laporan Baru',
     date: taskData.taskDate || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -132,6 +170,7 @@ export default function ReportDetailScreen() {
     hasPhoto: false,
   } : {
     id: params.reportId || 'RPT-001',
+    ticket_number: 'RPT-000001',
     taskId: 'TSK-005',
     title: 'Inspeksi Gedung B - Lantai 5',
     date: '16 Feb 2026',
@@ -259,9 +298,9 @@ export default function ReportDetailScreen() {
       );
 
       setHasDraft(true);
-      Alert.alert('Sukses', 'Draft laporan berhasil disimpan', [
+      Alert.alert('Sukses', 'Draft laporan berhasil disimpan. Tugas belum selesai - kirim laporan untuk menyelesaikan.', [
         {
-          text: 'OK',
+          text: 'Kembali',
           onPress: () => router.back(),
         },
       ]);
@@ -320,12 +359,18 @@ export default function ReportDetailScreen() {
 
               console.log('Report submitted successfully:', response);
 
+              // Mark task as completed
+              const isCompleted = await completeTask(takenTaskId);
+              if (!isCompleted) {
+                console.warn('Report submitted but task completion failed');
+              }
+
               // Delete draft after successful submission
               const draftKey = `report_draft_${taskData?.taskId || report.id}`;
               await AsyncStorage.removeItem(draftKey);
 
               setIsSubmitting(false);
-              Alert.alert('Sukses', 'Laporan berhasil dikirim', [
+              Alert.alert('Sukses', 'Laporan berhasil dikirim dan tugas selesai', [
                 { text: 'OK', onPress: () => router.back() }
               ]);
             } catch (error: any) {
@@ -447,7 +492,7 @@ export default function ReportDetailScreen() {
                     {getStatusText(report.status)}
                   </Text>
                 </View>
-                <Text style={styles.reportId}>{report.id}</Text>
+                <Text style={styles.reportId}>{report.ticket_number}</Text>
               </View>
             </View>
 
@@ -471,6 +516,32 @@ export default function ReportDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* Team Members Section */}
+        {teamMembers.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tim Tugas</Text>
+            <View style={styles.teamContainer}>
+              {isLoadingTeam ? (
+                <ActivityIndicator size="small" color="#1d1d1f" />
+              ) : (
+                teamMembers.map((member) => (
+                  <View key={member.id} style={styles.teamMemberCard}>
+                    <View style={styles.teamMemberAvatar}>
+                      <Text style={styles.teamMemberAvatarText}>
+                        {member.name?.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.teamMemberInfo}>
+                      <Text style={styles.teamMemberName}>{member.name}</Text>
+                      <Text style={styles.teamMemberPosition}>{member.position || 'Team Member'}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Description */}
         <View style={styles.section}>
@@ -1199,6 +1270,46 @@ const styles = StyleSheet.create({
   modalCancelButtonText: {
     fontSize: 14,
     fontWeight: '500',
+    color: '#86868b',
+  },
+  teamContainer: {
+    gap: 10,
+    marginTop: 10,
+  },
+  teamMemberCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  teamMemberAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  teamMemberAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  teamMemberInfo: {
+    flex: 1,
+  },
+  teamMemberName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    marginBottom: 2,
+  },
+  teamMemberPosition: {
+    fontSize: 12,
     color: '#86868b',
   },
 });

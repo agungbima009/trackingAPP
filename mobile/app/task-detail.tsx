@@ -247,7 +247,9 @@ export default function TaskDetailScreen() {
                 <View style={[styles.priorityBadge, { backgroundColor: getStatusColor(currentStatus) }]}>
                   <Text style={styles.priorityBadgeText}>{getStatusText(currentStatus)}</Text>
                 </View>
-                <Text style={styles.taskId}>{task.taken_task_id?.substring(0, 8)}</Text>
+                <Text style={styles.taskId}>
+                  {task.ticket_number || task.taken_task_id?.substring(0, 8)}
+                </Text>
               </View>
             </View>
 

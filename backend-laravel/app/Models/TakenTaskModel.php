@@ -6,13 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use App\Traits\GeneratesTickets;
 
 class TakenTaskModel extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, GeneratesTickets;
 
     protected $table = 'taken_tasks';
     protected $primaryKey = 'taken_task_id';
+    protected $ticketPrefix = 'TT';
 
     protected $fillable = [
         'user_ids',
@@ -21,6 +23,7 @@ class TakenTaskModel extends Model
         'end_time',
         'date',
         'status',
+        'ticket_number',
     ];
 
     protected $casts = [
@@ -33,6 +36,18 @@ class TakenTaskModel extends Model
     ];
 
     protected $appends = ['is_within_work_hours', 'computed_status'];
+
+    /**
+     * Boot method to auto-generate ticket numbers
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->generateTicketNumber();
+        });
+    }
 
     /**
      * Get the task this assignment belongs to

@@ -7,6 +7,7 @@ import { reportsAPI } from '@/services/api';
 
 interface Report {
   report_id: string;
+  ticket_number?: string;
   report: string;
   created_at: string;
   takenTask: {
@@ -180,7 +181,7 @@ export default function LaporanScreen() {
                   <TouchableOpacity
                     key={report.report_id}
                     style={styles.reportCard}
-                    onPress={() => router.push(`/report-detail?reportId=${report.report_id}`)}
+                    onPress={() => router.push(`/report-detail?reportId=${report.report_id}&takenTaskId=${report.takenTask?.taken_task_id}`)}
                   >
                     {/* Report Header */}
                     <View style={styles.reportHeader}>
@@ -190,7 +191,7 @@ export default function LaporanScreen() {
                           { backgroundColor: '#10B981' }
                         ]} />
                         <Text style={styles.reportId}>
-                          {report.report_id.substring(0, 8).toUpperCase()}
+                          {report.ticket_number || report.report_id.substring(0, 8).toUpperCase()}
                         </Text>
                       </View>
                       <View style={[
@@ -244,7 +245,7 @@ export default function LaporanScreen() {
                     <View style={styles.reportActions}>
                       <TouchableOpacity
                         style={[styles.reportActionButton, styles.viewButton]}
-                        onPress={() => router.push(`/report-detail?reportId=${report.report_id}`)}
+                        onPress={() => router.push(`/report-detail?reportId=${report.report_id}&takenTaskId=${report.takenTask?.taken_task_id}`)}
                       >
                         <IconSymbol size={16} name="eye.fill" color="#FFFFFF" />
                         <Text style={[styles.reportActionText, { color: '#FFFFFF' }]}>

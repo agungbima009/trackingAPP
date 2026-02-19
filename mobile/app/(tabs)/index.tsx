@@ -199,7 +199,7 @@ export default function HomeScreen() {
                   <View style={styles.pulseIndicator} />
                   <Text style={styles.activeTaskBadgeText}>AKTIF</Text>
                 </View>
-                <Text style={styles.activeTaskId}>{activeTask.taken_task_id?.substring(0, 8)}</Text>
+                <Text style={styles.activeTaskId}>{activeTask.ticket_number || activeTask.taken_task_id?.substring(0, 8)}</Text>
               </View>
 
               <Text style={styles.activeTaskTitle}>{activeTask.task?.title}</Text>
@@ -308,7 +308,7 @@ export default function HomeScreen() {
                           {getStatusText(task.computed_status || task.status)}
                         </Text>
                       </View>
-                      <Text style={styles.taskId}>{task.taken_task_id?.substring(0, 8)}</Text>
+                      <Text style={styles.taskId}>{task.ticket_number || task.taken_task_id?.substring(0, 8)}</Text>
                     </View>
                   </View>
 
