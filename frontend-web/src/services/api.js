@@ -125,8 +125,16 @@ export const refreshToken = async () => {
 // USER MANAGEMENT SERVICES (Admin)
 // ============================================
 
-/**
- * Get all users (Admin)
+/** * Create new user (Admin only)
+ * @param {Object} userData - New user data (name, email, password, role)
+ * @returns {Promise} Created user
+ */
+export const createUser = async (userData) => {
+  const response = await api.post('/admin/users', userData);
+  return response.data;
+};
+
+/** * Get all users (Admin)
  * @param {Object} filters - Query parameters
  * @returns {Promise} Users list
  */

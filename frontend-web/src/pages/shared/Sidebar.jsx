@@ -7,6 +7,20 @@ function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Get user data from localStorage
+  React.useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -32,14 +46,14 @@ function Sidebar() {
     { icon: '/icon/System-Report.png', label: 'Monitoring', path: '/monitoring' },
     { icon: '/icon/Clipboard.png', label: 'Task', path: '/task' },
     { icon: '/icon/Audit.png', label: 'Taken', path: '/taken' },
-    { icon: '👥', label: 'Users', path: '/users' }
+    { icon: '/icon/Add-User-Male.png', label: 'Users', path: '/users' }
   ];
 
-  const documentItems = [
-    { icon: '📚', label: 'Data Library', path: '/documents/library' },
-    { icon: '📄', label: 'Reports', path: '/documents/reports' },
-    { icon: '✍️', label: 'Word Assistant', path: '/documents/assistant' }
-  ];
+  // const documentItems = [
+  //   { icon: '📚', label: 'Data Library', path: '/documents/library' },
+  //   { icon: '📄', label: 'Reports', path: '/documents/reports' },
+  //   { icon: '✍️', label: 'Word Assistant', path: '/documents/assistant' }
+  // ];
 
   return (
     <aside className="sidebar">
@@ -65,7 +79,7 @@ function Sidebar() {
           ))}
         </ul>
 
-        <div className="nav-section">
+        {/* <div className="nav-section">
           <h3 className="section-title">Documents</h3>
           <ul className="nav-list">
             {documentItems.map((item, index) => (
@@ -87,15 +101,15 @@ function Sidebar() {
             <span>...</span>
             <span>More</span>
           </button>
-        </div>
+        </div> */}
       </nav>
 
       <div className="sidebar-footer">
         <div className="user-profile">
-          <div className="user-avatar">S</div>
+          <div className="user-avatar">{currentUser?.name?.charAt(0).toUpperCase() || 'U'}</div>
           <div className="user-info">
-            <span className="user-name">shadon</span>
-            <span className="user-email">hi@example.com</span>
+            <span className="user-name">{currentUser?.name || 'User'}</span>
+            <span className="user-email">{currentUser?.email || 'user@example.com'}</span>
           </div>
           <button className="user-menu" onClick={toggleUserMenu}>⋮</button>
           {showUserMenu && (

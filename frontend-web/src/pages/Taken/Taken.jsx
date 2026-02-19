@@ -9,15 +9,14 @@ function Taken() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [currentTakenId, setCurrentTakenId] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
 
   const [formData, setFormData] = useState({
     task_id: '',
     user_ids: [],
     date: '',
-    start_time: '',
-    status: 'active'
+    start_time: ''
   });
 
   const [filters, setFilters] = useState({
@@ -27,12 +26,31 @@ function Taken() {
     date: ''
   });
 
-  // Load data on component mount
-  useEffect(() => {
-    loadAssignments();
-    loadTasks();
-    loadUsers();
-  }, []);
+  // Toast notification function
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
+  // Show confirmation modal
+  const showConfirmModal = (title, message, onConfirm, type = 'delete') => {
+    setConfirmModal({ show: true, title, message, onConfirm, type });
+  };
+
+  // Handle confirm action
+  const handleConfirm = () => {
+    if (confirmModal.onConfirm) {
+      confirmModal.onConfirm();
+    }
+    setConfirmModal({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
+  };
+
+  // Handle cancel confirmation
+  const handleCancelConfirm = () => {
+    setConfirmModal({ show: false, title: '', message: '', onConfirm: null, type: 'delete' });
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -78,21 +96,16 @@ function Taken() {
 
   const handleOpenModal = () => {
     setShowModal(true);
-    setEditMode(false);
-    setCurrentTakenId(null);
     setFormData({
       task_id: '',
       user_ids: [],
       date: new Date().toISOString().split('T')[0],
-      start_time: '',
-      status: 'active'
+      start_time: ''
     });
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setEditMode(false);
-    setCurrentTakenId(null);
     setError('');
   };
 
@@ -147,74 +160,109 @@ function Taken() {
     setError('');
 
     try {
-      if (editMode && currentTakenId) {
-        // Update existing assignment
-        await updateAssignment(currentTakenId, formData);
-        alert('Assignment updated successfully!');
-      } else {
-        // Create new assignment
-        await createAssignment(formData);
-        alert('Assignment created successfully!');
-      }
-
+      // Create new assignment with default status 'pending'
+      const assignmentData = {
+        ...formData,
+        status: 'pending'
+      };
+      await createAssignment(assignmentData);
+      showToast('Assignment created successfully!', 'success');
       setShowModal(false);
-      loadAssignments(filters);
+      // Reload tanpa filter untuk memastikan data terbaru muncul
+      loadAssignments();
     } catch (err) {
       console.error('Error saving assignment:', err);
       setError(err.response?.data?.message || 'Failed to save assignment. Please try again.');
     }
   };
 
-  const handleEdit = async (takenId) => {
-    try {
-      setLoading(true);
-      const assignment = takens.find(t => t.taken_task_id === takenId);
-
-      if (assignment) {
-        setFormData({
-          task_id: assignment.task_id || '',
-          user_ids: assignment.user_ids || [],
-          date: assignment.date?.split('T')[0] || '',
-          start_time: assignment.start_time || '',
-          status: assignment.status || 'active'
-        });
-
-        setCurrentTakenId(takenId);
-        setEditMode(true);
-        setShowModal(true);
-      }
-    } catch (err) {
-      console.error('Error loading assignment:', err);
-      setError('Failed to load assignment details.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDelete = async (takenId) => {
-    if (window.confirm('Are you sure you want to delete this assignment?')) {
-      try {
-        await deleteAssignment(takenId);
-        alert('Assignment deleted successfully!');
-        loadAssignments(filters);
-      } catch (err) {
-        console.error('Error deleting assignment:', err);
-        setError(err.response?.data?.message || 'Failed to delete assignment.');
-      }
-    }
+    showConfirmModal(
+      'Delete Assignment',
+      'Are you sure you want to delete this assignment? This action cannot be undone.',
+      async () => {
+        try {
+          await deleteAssignment(takenId);
+          showToast('Assignment deleted successfully!', 'success');
+          // Reload tanpa filter untuk menghindari data hilang
+          loadAssignments();
+        } catch (err) {
+          console.error('Error deleting assignment:', err);
+          showToast(err.response?.data?.message || 'Failed to delete assignment.', 'error');
+        }
+      },
+      'delete'
+    );
   };
 
   const getStatusBadgeClass = (status) => {
     const statusMap = {
-      'pending': 'status-badge pending',
-      'active': 'status-badge active',
-      'completed': 'status-badge completed'
+      'pending': 'status-pending',
+      'in_progress': 'status-in-progress',
+      'completed': 'status-completed'
     };
-    return statusMap[status] || 'status-badge';
+    return statusMap[status] || '';
+  };
+
+  const getStatusLabel = (status) => {
+    const labelMap = {
+      'pending': 'Pending',
+      'in_progress': 'In Progress',
+      'completed': 'Completed'
+    };
+    return labelMap[status] || status;
   };
 
   return (
     <div className="taken-page">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          <div className="toast-icon">
+            {toast.type === 'success' && '✓'}
+            {toast.type === 'error' && '✕'}
+            {toast.type === 'warning' && '⚠'}
+            {toast.type === 'info' && 'ℹ'}
+          </div>
+          <div className="toast-message">{toast.message}</div>
+          <button 
+            className="toast-close" 
+            onClick={() => setToast({ show: false, message: '', type: '' })}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.show && (
+        <div className="confirm-overlay" onClick={handleCancelConfirm}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">
+              {confirmModal.type === 'delete' && (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="24" fill="#FEE2E2"/>
+                  <path d="M16 18H18H32M30 18V32C30 32.5304 29.7893 33.0391 29.4142 33.4142C29.0391 33.7893 28.5304 34 28 34H20C19.4696 34 18.9609 33.7893 18.5858 33.4142C18.2107 33.0391 18 32.5304 18 32V18M21 18V16C21 15.4696 21.2107 14.9609 21.5858 14.5858C21.9609 14.2107 22.4696 14 23 14H25C25.5304 14 26.0391 14.2107 26.4142 14.5858C26.7893 14.9609 27 15.4696 27 16V18" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+            <h3 className="confirm-title">{confirmModal.title}</h3>
+            <p className="confirm-message">{confirmModal.message}</p>
+            <div className="confirm-actions">
+              <button className="btn-confirm-cancel" onClick={handleCancelConfirm}>
+                Cancel
+              </button>
+              <button 
+                className={`btn-confirm-ok ${confirmModal.type}`} 
+                onClick={handleConfirm}
+              >
+                {confirmModal.type === 'delete' ? 'Delete' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="taken-header">
         <div>
           <h1>Task Assignment Management</h1>
@@ -265,7 +313,7 @@ function Taken() {
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
-            <option value="active">Active</option>
+            <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
           </select>
 
@@ -297,7 +345,8 @@ function Taken() {
         <div className="taken-table-container">
           {loading ? (
             <div className="loading-state">
-              <p>Loading assignments...</p>
+              <div className="spinner"></div>
+              <p>Memuat data...</p>
             </div>
           ) : (
             <table className="taken-table">
@@ -351,23 +400,14 @@ function Taken() {
                         {taken.start_time ? new Date(taken.start_time).toLocaleString() : '-'}
                       </td>
                       <td>
-                        <span className={getStatusBadgeClass(taken.status)}>
-                          {taken.status?.replace('_', ' ').toUpperCase()}
+                        <span className={`status-badge ${getStatusBadgeClass(taken.status)}`}>
+                          {getStatusLabel(taken.status)}
                         </span>
                       </td>
                       <td className="date-cell">
                         {taken.created_at ? new Date(taken.created_at).toLocaleDateString() : '-'}
                       </td>
                       <td className="actions-cell">
-                        <button
-                          className="action-btn edit-btn"
-                          onClick={() => handleEdit(taken.taken_task_id)}
-                          title="Edit"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.99967 14.3334L2.99967 11L11.333 2.00004Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
                         <button
                           className="action-btn delete-btn"
                           onClick={() => handleDelete(taken.taken_task_id)}
@@ -393,7 +433,7 @@ function Taken() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editMode ? 'Edit Assignment' : 'Assign Task'}</h2>
+              <h2>Assign Task</h2>
               <button className="modal-close" onClick={handleCloseModal}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -471,26 +511,12 @@ function Taken() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={handleCloseModal}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-submit">
-                  {editMode ? 'Update Assignment' : 'Assign Task'}
+                  Assign Task
                 </button>
               </div>
             </form>

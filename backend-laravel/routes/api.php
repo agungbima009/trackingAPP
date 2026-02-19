@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // User management
         Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::put('/users/{id}/status', [UserController::class, 'updateStatus']);
         Route::get('/departments', [UserController::class, 'departments']);
