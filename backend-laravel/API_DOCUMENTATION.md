@@ -2185,6 +2185,282 @@ For issues or questions, please refer to:
 | GET | `/api/admin/locations/nearby` | Find nearby locations |
 | DELETE | `/api/admin/locations/{id}` | Delete location record |
 
+### Report Management (Employee)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/reports` | Create new report |
+| GET | `/api/reports/my` | Get my reports |
+| GET | `/api/reports/{id}` | View report details |
+| PUT | `/api/reports/{id}` | Update own report |
+| GET | `/api/reports/statistics/my` | Get my report statistics |
+
+### Report Management (Admin)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/reports` | Get all reports |
+| GET | `/api/admin/reports/tasks/{id}` | Get reports for specific task |
+| GET | `/api/admin/reports/statistics` | Get overall report statistics |
+| DELETE | `/api/admin/reports/{id}` | Delete report |
+
+---
+
+## 📝 Report Management Routes
+
+### Create Report (Employee)
+```http
+POST /api/reports
+```
+
+**Body:**
+```json
+{
+  "taken_task_id": "uuid-here",
+  "report": "Detailed report description",
+  "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUh..."
+  ]
+}
+```
+
+**Validation Rules:**
+- `taken_task_id`: required, UUID, must exist in taken_tasks
+- `report`: required, string (report description/text)
+- `photos`: optional, array of base64 encoded images
+
+**Response (201):**
+```json
+{
+  "message": "Report created successfully",
+  "report": {
+    "report_id": "uuid-here",
+    "user_id": "user-uuid",
+    "taken_task_id": "task-uuid",
+    "report": "Detailed report description",
+    "image": "[\"reports/report_abc123_0.jpg\",\"reports/report_abc123_1.png\"]",
+    "created_at": "2026-02-19T10:30:00.000000Z",
+    "takenTask": {
+      "taken_task_id": "task-uuid",
+      "task": {
+        "task_id": "main-task-uuid",
+        "title": "Client Meeting"
+      }
+    }
+  }
+}
+```
+
+---
+
+### Get My Reports (Employee)
+```http
+GET /api/reports/my
+```
+
+**Query Parameters:**
+- `start_date` (optional): Filter by date (Y-m-d)
+- `end_date` (optional): Filter by date (Y-m-d)
+- `per_page` (optional): Items per page (default: 15)
+
+**Response (200):**
+```json
+{
+  "reports": {
+    "current_page": 1,
+    "data": [
+      {
+        "report_id": "uuid",
+        "user_id": "user-uuid",
+        "report": "Report description",
+        "created_at": "2026-02-19T10:30:00.000000Z",
+        "takenTask": {
+          "taken_task_id": "task-uuid",
+          "task": {
+            "task_id": "main-task-uuid",
+            "title": "Client Meeting",
+            "location": "Downtown Office"
+          }
+        }
+      }
+    ],
+    "total": 25
+  }
+}
+```
+
+---
+
+### Get Report Details
+```http
+GET /api/reports/{id}
+```
+
+**Response (200):**
+```json
+{
+  "report": {
+    "report_id": "uuid",
+    "user_id": "user-uuid",
+    "taken_task_id": "task-uuid",
+    "report": "Detailed report text",
+    "image": "[\"reports/photo1.jpg\",\"reports/photo2.png\"]",
+    "created_at": "2026-02-19T10:30:00.000000Z",
+    "user": {
+      "id": "user-uuid",
+      "name": "Michael Smith",
+      "email": "michael@trackingapp.com",
+      "department": "Sales",
+      "position": "Sales Representative"
+    },
+    "takenTask": {
+      "taken_task_id": "task-uuid",
+      "task": {
+        "task_id": "main-task-uuid",
+        "title": "Client Meeting",
+        "description": "Meet with potential client",
+        "location": "Downtown Office"
+      },
+      "users": [
+        {
+          "id": "user-uuid",
+          "name": "Michael Smith"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Update Report (Employee)
+```http
+PUT /api/reports/{id}
+```
+
+**Body:**
+```json
+{
+  "report": "Updated report description",
+  "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+  ]
+}
+```
+
+**Note:** Including `photos` will replace all existing photos.
+
+**Response (200):**
+```json
+{
+  "message": "Report updated successfully",
+  "report": { /* updated report data */ }
+}
+```
+
+---
+
+### Get All Reports (Admin)
+```http
+GET /api/admin/reports
+```
+
+**Query Parameters:**
+- `user_id` (optional): Filter by user
+- `task_id` (optional): Filter by task
+- `search` (optional): Search in report description
+- `per_page` (optional): Items per page (default: 15)
+
+**Response (200):**
+```json
+{
+  "current_page": 1,
+  "data": [
+    {
+      "report_id": "uuid",
+      "report": "Report text",
+      "created_at": "2026-02-19T10:30:00.000000Z",
+      "user": {
+        "id": "user-uuid",
+        "name": "Michael Smith",
+        "email": "michael@trackingapp.com"
+      },
+      "takenTask": {
+        "taken_task_id": "task-uuid",
+        "task": {
+          "task_id": "main-task-uuid",
+          "title": "Client Meeting"
+        }
+      }
+    }
+  ],
+  "total": 125
+}
+```
+
+---
+
+### Get Task Reports (Admin)
+```http
+GET /api/admin/reports/tasks/{taskId}
+```
+
+**Response (200):**
+```json
+{
+  "reports": [
+    {
+      "report_id": "uuid",
+      "report": "Report description",
+      "created_at": "2026-02-19T10:30:00.000000Z",
+      "user": {
+        "id": "user-uuid",
+        "name": "Michael Smith"
+      },
+      "takenTask": {
+        "taken_task_id": "task-uuid"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### Get Report Statistics
+```http
+GET /api/reports/statistics/my
+# or (Admin)
+GET /api/admin/reports/statistics?user_id={userId}
+```
+
+**Response (200):**
+```json
+{
+  "statistics": {
+    "total_reports": 45,
+    "reports_this_month": 12,
+    "reports_this_week": 3
+  }
+}
+```
+
+---
+
+### Delete Report (Admin)
+```http
+DELETE /api/admin/reports/{id}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Report deleted successfully"
+}
+```
+
+**Note:** This also deletes all associated photo files from storage.
+
 ---
 
 ## Status Codes

@@ -18,9 +18,13 @@ class TasksModel extends Model
         'description',
         'location',
         'status',
+        'start_time',
+        'end_time',
+        'manual_override',
     ];
 
     protected $casts = [
+        'manual_override' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -31,6 +35,48 @@ class TasksModel extends Model
     public function takenTasks()
     {
         return $this->hasMany(TakenTaskModel::class, 'task_id', 'task_id');
+    }
+
+    /**
+     * Check if current time is within task working hours
+     */
+    public function isWithinWorkingHours()
+    {
+        $now = now();
+        $currentTime = $now->format('H:i:s');
+
+        $startTime = $this->start_time ? date('H:i:s', strtotime($this->start_time)) : '08:00:00';
+        $endTime = $this->end_time ? date('H:i:s', strtotime($this->end_time)) : '17:00:00';
+
+        return $currentTime >= $startTime && $currentTime <= $endTime;
+    }
+
+    /**
+     * Get the computed status based on time (if not manually overridden)
+     */
+    public function getComputedStatus()
+    {
+        // If manually overridden, return the stored status
+        if ($this->manual_override) {
+            return $this->attributes['status'];
+        }
+
+        // Otherwise, compute based on time
+        return $this->isWithinWorkingHours() ? 'active' : 'inactive';
+    }
+
+    /**
+     * Get status attribute - returns computed status if not manually overridden
+     */
+    public function getStatusAttribute($value)
+    {
+        // If manually overridden, return the stored status
+        if ($this->manual_override) {
+            return $value;
+        }
+
+        // Otherwise, compute based on time
+        return $this->isWithinWorkingHours() ? 'active' : 'inactive';
     }
 
     /**

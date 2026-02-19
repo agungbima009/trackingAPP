@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/theme';
+import { tasksAPI } from '@/services/api';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -13,13 +14,25 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [myTasks, setMyTasks] = useState<any[]>([]);
+  const [statistics, setStatistics] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const filterOptions = ['Semua', 'Menunggu', 'Berjalan', 'Selesai', 'Tidak Aktif'];
+  const filterOptions = ['Semua', 'Menunggu', 'Berjalan', 'Selesai'];
 
   // Load user data on mount
   useEffect(() => {
     loadUserData();
+    loadTasksData();
   }, []);
+
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadTasksData();
+    }, [])
+  );
 
   const loadUserData = async () => {
     try {
@@ -31,9 +44,34 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+    }
+  };
+
+  const loadTasksData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch my tasks and statistics
+      const [tasksResponse, statsResponse] = await Promise.all([
+        tasksAPI.getMyTasks(),
+        tasksAPI.getMyStatistics(),
+      ]);
+
+      setMyTasks(tasksResponse.data || []);
+      setStatistics(statsResponse);
+    } catch (error: any) {
+      console.error('Error loading tasks:', error);
+      setError(error.message || 'Failed to load tasks');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await loadTasksData();
+    setIsRefreshing(false);
   };
 
   const getGreeting = () => {
@@ -43,78 +81,21 @@ export default function HomeScreen() {
     return 'Good Evening';
   };
 
-  // Data statistik
-  const todayStats = {
-    available: 5,
-    inProgress: 1,
-    completed: 3,
-  };
-
-  // Data tugas yang tersedia
-  const availableTasks = [
-    {
-      id: 'TSK-001',
-      title: 'Inspeksi Gedung B - Lantai 5',
-      location: 'Jl. Thamrin No. 45, Jakarta Pusat',
-      status: 'pending',
-      deadline: '16 Feb 2026, 16:00',
-      estimatedTime: '2 jam',
-      description: 'Melakukan inspeksi rutin gedung B lantai 5',
-    },
-    {
-      id: 'TSK-002',
-      title: 'Survei Lokasi Project C',
-      location: 'Jl. Sudirman No. 123, Jakarta Selatan',
-      status: 'in_progress',
-      deadline: '16 Feb 2026, 18:00',
-      estimatedTime: '3 jam',
-      description: 'Survei lokasi untuk persiapan konstruksi project C',
-    },
-    {
-      id: 'TSK-003',
-      title: 'Meeting dengan Client XYZ',
-      location: 'Plaza Indonesia, Jakarta Pusat',
-      status: 'pending',
-      deadline: '17 Feb 2026, 10:00',
-      estimatedTime: '1.5 jam',
-      description: 'Meeting untuk presentasi proposal project',
-    },
-    {
-      id: 'TSK-004',
-      title: 'Pengecekan Material Site A',
-      location: 'Jl. HR Rasuna Said, Jakarta Selatan',
-      status: 'completed',
-      deadline: '17 Feb 2026, 14:00',
-      estimatedTime: '1 jam',
-      description: 'Cek kondisi dan jumlah material di site A',
-    },
-    {
-      id: 'TSK-006',
-      title: 'Audit Keuangan Project D',
-      location: 'Jl. MH Thamrin, Jakarta Pusat',
-      status: 'inactive',
-      deadline: '18 Feb 2026, 09:00',
-      estimatedTime: '2.5 jam',
-      description: 'Audit menyeluruh untuk project D',
-    },
-  ];
-
-  // Tugas yang sedang dikerjakan
-  const activeTask = {
-    id: 'TSK-005',
-    title: 'Inspeksi Rutin Gedung A',
-    location: 'Menara BCA, Jakarta',
-    startTime: '08:00',
-    duration: '2 jam 15 menit',
-    status: 'in_progress',
+  const handleStartTask = async (taskId: string) => {
+    try {
+      await tasksAPI.startTask(taskId);
+      await loadTasksData();
+    } catch (error: any) {
+      alert(error.message || 'Failed to start task');
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return '#FFC107';
-      case 'in_progress': return '#3B82F6';
+      case 'in progress': return '#3B82F6';
       case 'completed': return '#10B981';
-      case 'inactive': return '#9CA3AF';
+      case 'inactive': return '#6B7280';
       default: return '#6B7280';
     }
   };
@@ -122,25 +103,29 @@ export default function HomeScreen() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending': return 'Menunggu';
-      case 'in_progress': return 'Berjalan';
+      case 'in progress': return 'Berjalan';
       case 'completed': return 'Selesai';
       case 'inactive': return 'Tidak Aktif';
-      default: return '';
+      default: return status;
     }
   };
 
   const getFilteredTasks = () => {
     if (selectedFilter === 'Semua') {
-      return availableTasks;
+      return myTasks;
     }
-    return availableTasks.filter((task) => {
-      if (selectedFilter === 'Menunggu') return task.status === 'pending';
-      if (selectedFilter === 'Berjalan') return task.status === 'in_progress';
-      if (selectedFilter === 'Selesai') return task.status === 'completed';
-      if (selectedFilter === 'Tidak Aktif') return task.status === 'inactive';
+    return myTasks.filter((task) => {
+      // Use computed_status if available, otherwise use status
+      const taskStatus = task.computed_status || task.status;
+
+      if (selectedFilter === 'Menunggu') return taskStatus === 'pending';
+      if (selectedFilter === 'Berjalan') return taskStatus === 'in progress';
+      if (selectedFilter === 'Selesai') return taskStatus === 'completed';
       return true;
     });
   };
+
+  const activeTask = myTasks.find(task => (task.computed_status || task.status) === 'in progress');
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -167,51 +152,67 @@ export default function HomeScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
 
         {/* Quick Stats */}
         <View style={styles.section}>
           <View style={styles.quickStatsRow}>
             <View style={styles.quickStatCard}>
-              <Text style={styles.quickStatValue}>{todayStats.available}</Text>
-              <Text style={styles.quickStatLabel}>Tersedia</Text>
+              <Text style={styles.quickStatValue}>{statistics?.total_tasks || 0}</Text>
+              <Text style={styles.quickStatLabel}>Total</Text>
             </View>
             <View style={styles.quickStatCard}>
-              <Text style={styles.quickStatValue}>{todayStats.inProgress}</Text>
+              <Text style={styles.quickStatValue}>{statistics?.in_progress || 0}</Text>
               <Text style={styles.quickStatLabel}>Aktif</Text>
             </View>
             <View style={styles.quickStatCard}>
-              <Text style={styles.quickStatValue}>{todayStats.completed}</Text>
+              <Text style={styles.quickStatValue}>{statistics?.completed || 0}</Text>
               <Text style={styles.quickStatLabel}>Selesai</Text>
             </View>
           </View>
         </View>
+
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={loadTasksData} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Active Task Card */}
         {activeTask && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tugas Sedang Dikerjakan</Text>
 
-            <TouchableOpacity style={[styles.activeTaskCard, { borderLeftColor: getStatusColor(activeTask.status) }]}>
+            <TouchableOpacity
+              style={[styles.activeTaskCard, { borderLeftColor: getStatusColor(activeTask.computed_status || activeTask.status) }]}
+              onPress={() => router.push(`/task-detail?taskId=${activeTask.taken_task_id}`)}
+            >
               <View style={styles.activeTaskHeader}>
                 <View style={styles.activeTaskBadge}>
                   <View style={styles.pulseIndicator} />
                   <Text style={styles.activeTaskBadgeText}>AKTIF</Text>
                 </View>
-                <Text style={styles.activeTaskId}>{activeTask.id}</Text>
+                <Text style={styles.activeTaskId}>{activeTask.taken_task_id?.substring(0, 8)}</Text>
               </View>
 
-              <Text style={styles.activeTaskTitle}>{activeTask.title}</Text>
+              <Text style={styles.activeTaskTitle}>{activeTask.task?.title}</Text>
 
               <View style={styles.activeTaskInfo}>
                 <View style={styles.activeTaskInfoItem}>
                   <IconSymbol size={16} name="location.fill" color="#86868b" />
-                  <Text style={styles.activeTaskInfoText}>{activeTask.location}</Text>
+                  <Text style={styles.activeTaskInfoText}>{activeTask.task?.location}</Text>
                 </View>
                 <View style={styles.activeTaskInfoItem}>
                   <IconSymbol size={16} name="clock.fill" color="#86868b" />
                   <Text style={styles.activeTaskInfoText}>
-                    Mulai {activeTask.startTime} • {activeTask.duration}
+                    Mulai {new Date(activeTask.start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                   </Text>
                 </View>
               </View>
@@ -219,7 +220,7 @@ export default function HomeScreen() {
               <View style={styles.activeTaskActions}>
                 <TouchableOpacity
                   style={styles.activeTaskButton}
-                  onPress={() => router.push(`/task-detail?taskId=${activeTask.id}`)}
+                  onPress={() => router.push(`/task-detail?taskId=${activeTask.taken_task_id}`)}
                 >
                   <IconSymbol size={16} name="eye.fill" color="#FFFFFF" />
                   <Text style={styles.activeTaskButtonText}>Lihat Detail</Text>
@@ -229,11 +230,11 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Available Tasks */}
+        {/* My Tasks (Tugas Saya) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Tugas Tersedia</Text>
-            
+            <Text style={styles.sectionTitle}>Tugas Saya</Text>
+
             {/* Filter Dropdown Button */}
             <View style={styles.filterDropdownContainerInline}>
               <TouchableOpacity
@@ -281,57 +282,98 @@ export default function HomeScreen() {
           )}
 
           {/* Tasks List */}
-          <View style={styles.tasksList}>
-            {getFilteredTasks().map((task) => (
-              <TouchableOpacity key={task.id} style={styles.taskCard}>
-                <View style={styles.taskHeader}>
-                  <View style={styles.taskHeaderLeft}>
-                    <View style={[
-                      styles.priorityBadge,
-                      { backgroundColor: getStatusColor(task.status) }
-                    ]}>
-                      <Text style={styles.priorityBadgeText}>
-                        {getStatusText(task.status)}
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#000000" />
+              <Text style={styles.loadingText}>Loading tasks...</Text>
+            </View>
+          ) : getFilteredTasks().length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No tasks found</Text>
+            </View>
+          ) : (
+            <View style={styles.tasksList}>
+              {getFilteredTasks().map((task) => (
+                <View
+                  key={task.taken_task_id}
+                  style={styles.taskCard}
+                >
+                  <View style={styles.taskHeader}>
+                    <View style={styles.taskHeaderLeft}>
+                      <View style={[
+                        styles.priorityBadge,
+                        { backgroundColor: getStatusColor(task.computed_status || task.status) }
+                      ]}>
+                        <Text style={styles.priorityBadgeText}>
+                          {getStatusText(task.computed_status || task.status)}
+                        </Text>
+                      </View>
+                      <Text style={styles.taskId}>{task.taken_task_id?.substring(0, 8)}</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.taskTitle}>{task.task?.title}</Text>
+                  <Text style={styles.taskDescription} numberOfLines={2}>
+                    {task.task?.description}
+                  </Text>
+
+                  <View style={styles.taskMeta}>
+                    <View style={styles.taskMetaItem}>
+                      <IconSymbol size={14} name="location.fill" color="#86868b" />
+                      <Text style={styles.taskMetaText} numberOfLines={1}>
+                        {task.task?.location}
                       </Text>
                     </View>
-                    <Text style={styles.taskId}>{task.id}</Text>
+                    <View style={styles.taskMetaItem}>
+                      <IconSymbol size={14} name="calendar" color="#86868b" />
+                      <Text style={styles.taskMetaText}>{task.date}</Text>
+                    </View>
+                    {task.task && task.task.start_time && task.task.end_time && (
+                      <View style={styles.taskMetaItem}>
+                        <IconSymbol size={14} name="clock" color="#86868b" />
+                        <Text style={styles.taskMetaText}>
+                          {task.task.start_time} - {task.task.end_time}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {!task.is_within_work_hours && (task.computed_status || task.status) === 'inactive' && (
+                    <View style={styles.inactiveWarning}>
+                      <IconSymbol size={14} name="exclamationmark.triangle.fill" color="#F59E0B" />
+                      <Text style={styles.inactiveWarningText}>
+                        Di luar jam kerja{task.task?.start_time && task.task?.end_time ? ` (${task.task.start_time} - ${task.task.end_time})` : ''}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.taskFooter}>
+                    {task.start_time && (
+                      <View style={styles.deadlineContainer}>
+                        <IconSymbol size={14} name="clock.fill" color="#3B82F6" />
+                        <Text style={styles.startTimeText}>
+                          {new Date(task.start_time).toLocaleString('id-ID', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.detailButton}
+                      onPress={() => router.push(`/task-detail?taskId=${task.taken_task_id}`)}
+                    >
+                      <Text style={styles.detailButtonText}>Detail</Text>
+                      <IconSymbol size={14} name="arrow.right.circle.fill" color="#FFFFFF" />
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <Text style={styles.taskTitle}>{task.title}</Text>
-                <Text style={styles.taskDescription} numberOfLines={2}>
-                  {task.description}
-                </Text>
-
-                <View style={styles.taskMeta}>
-                  <View style={styles.taskMetaItem}>
-                    <IconSymbol size={14} name="location.fill" color="#86868b" />
-                    <Text style={styles.taskMetaText} numberOfLines={1}>
-                      {task.location}
-                    </Text>
-                  </View>
-                  <View style={styles.taskMetaItem}>
-                    <IconSymbol size={14} name="clock.fill" color="#86868b" />
-                    <Text style={styles.taskMetaText}>{task.estimatedTime}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.taskFooter}>
-                  <View style={styles.deadlineContainer}>
-                    <IconSymbol size={14} name="calendar" color="#EF4444" />
-                    <Text style={styles.deadlineText}>{task.deadline}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.takeTaskButton}
-                    onPress={() => router.push(`/task-detail?taskId=${task.id}`)}
-                  >
-                    <Text style={styles.takeTaskButtonText}>Ambil Tugas</Text>
-                    <IconSymbol size={14} name="arrow.right.circle.fill" color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -663,7 +705,12 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontWeight: '500',
   },
-  takeTaskButton: {
+  startTimeText: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontWeight: '500',
+  },
+  detailButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -672,9 +719,83 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 4,
   },
-  takeTaskButtonText: {
+  detailButtonText: {
     fontSize: 12,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#86868b',
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#86868b',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    margin: 20,
+    padding: 16,
+    backgroundColor: '#FEE',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCC',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#C00',
+    marginBottom: 8,
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#C00',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  retryButtonText: {
+    fontSize: 12,
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  inactiveWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  inactiveWarningText: {
+    fontSize: 12,
+    color: '#92400E',
+    fontWeight: '500',
+    flex: 1,
+  },
+  inactiveBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  inactiveBadgeText: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });

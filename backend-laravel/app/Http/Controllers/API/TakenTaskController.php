@@ -90,7 +90,7 @@ class TakenTaskController extends Controller
             'user_ids.*' => 'exists:users,id',
             'date' => 'nullable|date',
             'start_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s',
-            'status' => 'nullable|in:pending,active,completed',
+            'status' => 'nullable|in:pending,in progress,completed',
         ]);
 
         $assignment = TakenTaskModel::create([
@@ -117,7 +117,7 @@ class TakenTaskController extends Controller
         $assignment = TakenTaskModel::findOrFail($id);
 
         $request->validate([
-            'status' => 'sometimes|required|in:pending,active,completed',
+            'status' => 'sometimes|required|in:pending,in progress,completed',
             'start_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s',
             'end_time' => 'nullable|date_format:Y-m-d\TH:i,Y-m-d H:i:s|after:start_time',
             'date' => 'nullable|date',
@@ -161,7 +161,7 @@ class TakenTaskController extends Controller
         }
 
         $assignment->update([
-            'status' => 'active',
+            'status' => 'in progress',
             'start_time' => now(),
         ]);
 
@@ -189,9 +189,9 @@ class TakenTaskController extends Controller
             ], 403);
         }
 
-        if ($assignment->status !== 'active') {
+        if ($assignment->status !== 'in progress') {
             return response()->json([
-                'message' => 'Task must be active to complete'
+                'message' => 'Task must be in progress to complete'
             ], 422);
         }
 
@@ -260,25 +260,101 @@ class TakenTaskController extends Controller
         $query = TakenTaskModel::with(['task'])
             ->whereJsonContains('user_ids', $userId);
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
         // Filter by date
         if ($request->has('date')) {
             $query->whereDate('date', $request->date);
         }
 
-        $assignments = $query->orderBy('date', 'desc')
-            ->paginate($request->get('per_page', 15));
+        // Order by status priority (in progress -> pending -> completed), then by date
+        $query->orderByRaw("
+            CASE status
+                WHEN 'in progress' THEN 1
+                WHEN 'pending' THEN 2
+                WHEN 'completed' THEN 3
+                ELSE 4
+            END
+        ")->orderBy('date', 'desc');
 
-        // Add assigned users to each assignment
-        foreach ($assignments->items() as $assignment) {
+        $assignments = $query->paginate($request->get('per_page', 15));
+
+        // Add assigned users, duration, and computed status to each assignment
+        $assignments->getCollection()->transform(function ($assignment) {
             $assignment->assigned_users = $assignment->getUsers();
+
+            // Calculate duration if both start and end time exist
+            if ($assignment->start_time && $assignment->end_time) {
+                $assignment->duration_minutes = $assignment->start_time->diffInMinutes($assignment->end_time);
+            }
+
+            // Add computed status and work hours check
+            $assignment->is_within_work_hours = $assignment->isWithinWorkHours();
+            $assignment->computed_status = $assignment->getComputedStatus();
+
+            return $assignment;
+        });
+
+        // Apply status filter AFTER computing statuses
+        if ($request->has('status')) {
+            $filtered = $assignments->getCollection()->filter(function ($assignment) use ($request) {
+                return $assignment->computed_status === $request->status;
+            });
+            $assignments->setCollection($filtered->values());
         }
 
         return response()->json($assignments);
+    }
+
+    /**
+     * Get my task statistics (authenticated user)
+     */
+    public function myStatistics(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        // Get all tasks and compute their statuses
+        $allTasks = TakenTaskModel::with('task')
+            ->whereJsonContains('user_ids', $userId)
+            ->get();
+
+        // Count by computed status
+        $total = $allTasks->count();
+        $completed = 0;
+        $inProgress = 0;
+        $pending = 0;
+        $inactive = 0;
+
+        foreach ($allTasks as $task) {
+            $computedStatus = $task->getComputedStatus();
+            switch ($computedStatus) {
+                case 'completed':
+                    $completed++;
+                    break;
+                case 'in progress':
+                    $inProgress++;
+                    break;
+                case 'pending':
+                    $pending++;
+                    break;
+                case 'inactive':
+                    $inactive++;
+                    break;
+            }
+        }
+
+        $stats = [
+            'total_tasks' => $total,
+            'completed' => $completed,
+            'in_progress' => $inProgress,
+            'pending' => $pending,
+            'inactive' => $inactive,
+        ];
+
+        // Calculate completion rate
+        $stats['completion_rate'] = $total > 0
+            ? round(($completed / $total) * 100, 2)
+            : 0;
+
+        return response()->json($stats);
     }
 
     /**
@@ -289,9 +365,14 @@ class TakenTaskController extends Controller
         $stats = [
             'total_assignments' => TakenTaskModel::whereJsonContains('user_ids', $userId)->count(),
             'completed' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'completed')->count(),
-            'active' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'active')->count(),
+            'in_progress' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'in progress')->count(),
             'pending' => TakenTaskModel::whereJsonContains('user_ids', $userId)->where('status', 'pending')->count(),
         ];
+
+        // Calculate completion rate
+        $stats['completion_rate'] = $stats['total_assignments'] > 0
+            ? round(($stats['completed'] / $stats['total_assignments']) * 100, 2)
+            : 0;
 
         return response()->json($stats);
     }

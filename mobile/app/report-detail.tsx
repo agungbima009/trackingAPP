@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Alert, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { reportsAPI } from '@/services/api';
 
 interface LocationPoint {
   id: string;
@@ -23,14 +26,111 @@ export default function ReportDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  // Parse task data if passed from task detail
+  let taskData = null;
+  if (params.taskData && typeof params.taskData === 'string') {
+    try {
+      taskData = JSON.parse(decodeURIComponent(params.taskData));
+    } catch (error) {
+      console.error('Error parsing task data:', error);
+    }
+  }
+
   // State management
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [reportDescription, setReportDescription] = useState('Inspeksi rutin gedung sudah selesai. Tidak ada temuan masalah. Semua sistem berjalan normal dan tidak terlihat kerusakan struktural maupun sistem elektrikal.');
+  const isNewReport = params.reportId === 'new';
+  const [isEditingDescription, setIsEditingDescription] = useState(isNewReport);
+  const [reportDescription, setReportDescription] = useState(
+    isNewReport
+      ? ''
+      : 'Inspeksi rutin gedung sudah selesai. Tidak ada temuan masalah. Semua sistem berjalan normal dan tidak terlihat kerusakan struktural maupun sistem elektrikal.'
+  );
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sample report data (in real app, fetch based on params.reportId)
-  const report = {
+  // Load draft on mount for new reports
+  useEffect(() => {
+    if (isNewReport && taskData?.taskId) {
+      loadDraft();
+    }
+  }, []);
+
+  const loadDraft = async () => {
+    try {
+      const draftKey = `report_draft_${taskData?.taskId}`;
+      const draftJson = await AsyncStorage.getItem(draftKey);
+
+      if (draftJson) {
+        const draft = JSON.parse(draftJson);
+        setReportDescription(draft.description || '');
+        setPhotos(draft.photos || []);
+        setHasDraft(true);
+        console.log('Draft loaded successfully');
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error);
+    }
+  };
+
+  // Helper function to convert image to base64
+  const convertImageToBase64 = async (uri: string): Promise<string> => {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+
+      // Determine the image type from URI
+      const imageType = uri.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+
+      // Return with proper data URI format
+      return `data:image/${imageType};base64,${base64}`;
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      throw error;
+    }
+  };
+
+  const deleteDraft = async () => {
+    Alert.alert(
+      'Hapus Draft',
+      'Apakah Anda yakin ingin menghapus draft ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const draftKey = `report_draft_${taskData?.taskId}`;
+              await AsyncStorage.removeItem(draftKey);
+              setHasDraft(false);
+              setReportDescription('');
+              setPhotos([]);
+              Alert.alert('Sukses', 'Draft berhasil dihapus');
+            } catch (error) {
+              console.error('Error deleting draft:', error);
+              Alert.alert('Error', 'Gagal menghapus draft');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Report data - use task data if available for new reports
+  const report = isNewReport && taskData ? {
+    id: 'NEW',
+    taskId: taskData.taskId,
+    title: taskData.taskTitle || 'Laporan Baru',
+    date: taskData.taskDate || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    status: 'draft',
+    startTime: taskData.taskStartTime ? new Date(taskData.taskStartTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-',
+    endTime: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    duration: '-',
+    hasPhoto: false,
+  } : {
     id: params.reportId || 'RPT-001',
     taskId: 'TSK-005',
     title: 'Inspeksi Gedung B - Lantai 5',
@@ -140,6 +240,108 @@ export default function ReportDetailScreen() {
     Alert.alert('Sukses', 'Deskripsi laporan telah diperbarui');
   };
 
+  // Handle save draft to AsyncStorage
+  const handleSaveDraft = async () => {
+    try {
+      const draftData = {
+        taskId: taskData?.taskId || report.taskId,
+        title: report.title,
+        description: reportDescription,
+        photos: photos,
+        date: report.date,
+        time: report.time,
+        savedAt: new Date().toISOString(),
+      };
+
+      await AsyncStorage.setItem(
+        `report_draft_${taskData?.taskId || report.id}`,
+        JSON.stringify(draftData)
+      );
+
+      setHasDraft(true);
+      Alert.alert('Sukses', 'Draft laporan berhasil disimpan', [
+        {
+          text: 'OK',
+          onPress: () => router.back(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'Gagal menyimpan draft laporan');
+      console.error('Error saving draft:', error);
+    }
+  };
+
+  // Handle submit report
+  const handleSubmitReport = async () => {
+    if (reportDescription.trim() === '') {
+      Alert.alert('Error', 'Deskripsi laporan harus diisi');
+      return;
+    }
+
+    if (photos.length === 0) {
+      Alert.alert('Error', 'Minimal 1 foto harus diunggah');
+      return;
+    }
+
+    Alert.alert(
+      'Kirim Laporan',
+      'Apakah Anda yakin ingin mengirim laporan ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Kirim',
+          onPress: async () => {
+            setIsSubmitting(true);
+            try {
+              // Convert photos to base64
+              console.log('Converting photos to base64...');
+              const base64Photos = await Promise.all(
+                photos.map(photo => convertImageToBase64(photo.uri))
+              );
+
+              // Get taken_task_id from taskData
+              const takenTaskId = taskData?.taskId;
+              if (!takenTaskId) {
+                throw new Error('Task assignment ID not found');
+              }
+
+              console.log('Submitting report to API...', {
+                takenTaskId,
+                descriptionLength: reportDescription.length,
+                photosCount: base64Photos.length,
+              });
+
+              // Call API to submit report
+              const response = await reportsAPI.createReport(
+                takenTaskId,
+                reportDescription,
+                base64Photos
+              );
+
+              console.log('Report submitted successfully:', response);
+
+              // Delete draft after successful submission
+              const draftKey = `report_draft_${taskData?.taskId || report.id}`;
+              await AsyncStorage.removeItem(draftKey);
+
+              setIsSubmitting(false);
+              Alert.alert('Sukses', 'Laporan berhasil dikirim', [
+                { text: 'OK', onPress: () => router.back() }
+              ]);
+            } catch (error: any) {
+              console.error('Error submitting report:', error);
+              setIsSubmitting(false);
+              Alert.alert(
+                'Error',
+                error.message || 'Gagal mengirim laporan. Silakan coba lagi.'
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Location history from tracking
   const locationHistory: LocationPoint[] = [
     {
@@ -197,6 +399,9 @@ export default function ReportDetailScreen() {
     }
   };
 
+  // Check if report can be submitted
+  const canSubmit = reportDescription.trim().length > 0 && photos.length > 0;
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
@@ -207,11 +412,26 @@ export default function ReportDetailScreen() {
         >
           <IconSymbol name="chevron.left" size={20} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detail Laporan</Text>
+        <Text style={styles.headerTitle}>
+          {isNewReport ? 'Buat Laporan Baru' : 'Detail Laporan'}
+        </Text>
         <TouchableOpacity style={styles.moreButton}>
           <IconSymbol name="ellipsis" size={20} color="#1d1d1f" />
         </TouchableOpacity>
       </View>
+
+      {/* Draft Status Banner */}
+      {hasDraft && isNewReport && (
+        <View style={styles.draftBanner}>
+          <View style={styles.draftBannerContent}>
+            <IconSymbol name="doc.text.fill" size={16} color="#F59E0B" />
+            <Text style={styles.draftBannerText}>Draft tersimpan</Text>
+          </View>
+          <TouchableOpacity onPress={deleteDraft}>
+            <Text style={styles.draftDeleteText}>Hapus</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Report Info Card */}
@@ -256,25 +476,27 @@ export default function ReportDetailScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Deskripsi Laporan</Text>
-            <TouchableOpacity
-              onPress={() => {
-                if (isEditingDescription) {
-                  handleSaveDescription();
-                } else {
-                  setIsEditingDescription(true);
-                }
-              }}
-              style={styles.editButton}
-            >
-              <IconSymbol
-                size={14}
-                name={isEditingDescription ? "checkmark" : "pencil"}
-                color="#FFFFFF"
-              />
-              <Text style={styles.editButtonText}>
-                {isEditingDescription ? 'Simpan' : 'Edit'}
-              </Text>
-            </TouchableOpacity>
+            {!isNewReport && (
+              <TouchableOpacity
+                onPress={() => {
+                  if (isEditingDescription) {
+                    handleSaveDescription();
+                  } else {
+                    setIsEditingDescription(true);
+                  }
+                }}
+                style={styles.editButton}
+              >
+                <IconSymbol
+                  size={14}
+                  name={isEditingDescription ? "checkmark" : "pencil"}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.editButtonText}>
+                  {isEditingDescription ? 'Simpan' : 'Edit'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {isEditingDescription ? (
@@ -287,12 +509,6 @@ export default function ReportDetailScreen() {
                 value={reportDescription}
                 onChangeText={setReportDescription}
               />
-              <TouchableOpacity
-                onPress={() => setIsEditingDescription(false)}
-                style={styles.cancelButton}
-              >
-                <Text style={styles.cancelButtonText}>Batal</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.descriptionCard}>
@@ -357,93 +573,77 @@ export default function ReportDetailScreen() {
           )}
         </View>
 
-        {/* Location Tracking */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Riwayat Lokasi</Text>
-            <View style={styles.locationCountBadge}>
-              <IconSymbol size={12} name="location.fill" color="#1d1d1f" />
-              <Text style={styles.locationCountText}>{locationHistory.length} Lokasi</Text>
-            </View>
-          </View>
-
-          {/* Summary Stats */}
-          <View style={styles.locationStatsCard}>
-            <View style={styles.locationStat}>
-              <IconSymbol size={18} name="mappin.circle.fill" color="#1d1d1f" />
-              <Text style={styles.locationStatValue}>{locationHistory.length}</Text>
-              <Text style={styles.locationStatLabel}>Dikunjungi</Text>
-            </View>
-            <View style={styles.locationStatDivider} />
-            <View style={styles.locationStat}>
-              <IconSymbol size={18} name="clock.fill" color="#1d1d1f" />
-              <Text style={styles.locationStatValue}>{report.duration}</Text>
-              <Text style={styles.locationStatLabel}>Durasi</Text>
-            </View>
-            <View style={styles.locationStatDivider} />
-            <View style={styles.locationStat}>
-              <IconSymbol size={18} name="figure.walk" color="#1d1d1f" />
-              <Text style={styles.locationStatValue}>0.8</Text>
-              <Text style={styles.locationStatLabel}>KM</Text>
-            </View>
-          </View>
-
-          {/* Location Timeline */}
-          <View style={styles.locationTimeline}>
-            {locationHistory.map((location, index) => (
-              <View key={location.id} style={styles.timelineItem}>
-                <View style={styles.timelineLeft}>
-                  <Text style={styles.timelineTime}>{location.time}</Text>
-                  <View style={styles.timelineDotContainer}>
-                    <View style={[
-                      styles.timelineDot,
-                      index === 0 && styles.timelineDotActive
-                    ]}>
-                      <IconSymbol
-                        size={12}
-                        name={index === 0 ? "checkmark" : "location.fill"}
-                        color="#FFFFFF"
-                      />
-                    </View>
-                    {index < locationHistory.length - 1 && (
-                      <View style={styles.timelineLine} />
-                    )}
-                  </View>
-                </View>
-
-                <View style={styles.timelineCard}>
-                  <Text style={styles.timelineLocation}>{location.location}</Text>
-                  <View style={styles.timelineCoords}>
-                    <IconSymbol size={11} name="ruler" color="#86868b" />
-                    <Text style={styles.timelineCoordsText}>{location.coordinates}</Text>
-                  </View>
-                  {location.notes && (
-                    <Text style={styles.timelineNotes}>{location.notes}</Text>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
         {/* Actions */}
         <View style={styles.section}>
-          <View style={styles.actionsCard}>
-            <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={18} name="square.and.arrow.up" color="#1d1d1f" />
-              <Text style={styles.actionButtonText}>Share Laporan</Text>
-            </TouchableOpacity>
+          {isNewReport ? (
+            <>
+              <View style={styles.actionsCard}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.saveDraftButton]}
+                  onPress={handleSaveDraft}
+                >
+                  <IconSymbol size={18} name="folder.fill" color="#FFFFFF" />
+                  <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>Simpan Draft</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={18} name="doc.on.doc" color="#1d1d1f" />
-              <Text style={styles.actionButtonText}>Duplikat</Text>
-            </TouchableOpacity>
+                {/* Submit Report Button - Only show if description and photos exist */}
+                {canSubmit && (
+                  <TouchableOpacity
+                    style={[
+                      styles.actionButton,
+                      styles.submitButton,
+                      isSubmitting && styles.buttonDisabled
+                    ]}
+                    onPress={handleSubmitReport}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <Text style={[styles.actionButtonText, { color: '#FFFFFF', marginLeft: 8 }]}>
+                          Mengirim...
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <IconSymbol size={18} name="paperplane.fill" color="#FFFFFF" />
+                        <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
+                          Kirim Laporan
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <TouchableOpacity style={styles.actionButton}>
-              <IconSymbol size={18} name="square.and.arrow.down" color="#1d1d1f" />
-              <Text style={styles.actionButtonText}>Export PDF</Text>
-            </TouchableOpacity>
-          </View>
+              {/* Submission Requirements Info */}
+              {!canSubmit && (
+                <View style={styles.requirementsCard}>
+                  <IconSymbol name="info.circle.fill" size={16} color="#F59E0B" />
+                  <Text style={styles.requirementsText}>
+                    Untuk mengirim laporan, lengkapi deskripsi dan minimal 1 foto
+                  </Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={styles.actionsCard}>
+              <TouchableOpacity style={styles.actionButton}>
+                <IconSymbol size={18} name="square.and.arrow.up" color="#1d1d1f" />
+                <Text style={styles.actionButtonText}>Share Laporan</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <IconSymbol size={18} name="doc.on.doc" color="#1d1d1f" />
+                <Text style={styles.actionButtonText}>Duplikat</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <IconSymbol size={18} name="square.and.arrow.down" color="#1d1d1f" />
+                <Text style={styles.actionButtonText}>Export PDF</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 32 }} />
@@ -873,6 +1073,58 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#1d1d1f',
+  },
+  primaryActionButton: {
+    backgroundColor: '#000000',
+  },
+  saveDraftButton: {
+    backgroundColor: '#6B7280',
+  },
+  submitButton: {
+    backgroundColor: '#10B981',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  requirementsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  requirementsText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#92400E',
+    lineHeight: 18,
+  },
+  draftBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FDE68A',
+  },
+  draftBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  draftBannerText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#92400E',
+  },
+  draftDeleteText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#EF4444',
   },
   modalContainer: {
     flex: 1,

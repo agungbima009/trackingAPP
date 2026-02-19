@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SwipeableButton } from '@/components/swipeable-button';
 import SuccessCheckOverlay from '@/components/SuccessCheckOverlay';
+import { tasksAPI } from '@/services/api';
 
 
 interface LocationPoint {
   id: string;
   time: string;
-  latitude: number;
-  longitude: number;
-  address: string;
+  location: string;
+  coordinates: string;
+  notes?: string;
 }
 
 export default function TaskDetailScreen() {
@@ -21,76 +22,199 @@ export default function TaskDetailScreen() {
   const [isTracking, setIsTracking] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [locationHistory, setLocationHistory] = useState<LocationPoint[]>([]);
+  const [task, setTask] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample task data (in real app, fetch based on params.taskId)
-  const task = {
-    id: params.taskId || 'TSK-001',
-    title: 'Inspeksi Komponen Listrik',
-    description: 'Melakukan pemeriksaan menyeluruh terhadap seluruh komponen listrik di gedung utama',
-    location: 'Gedung Utama, Lantai 3',
-    priority: 'high',
-    deadline: '2 Jam Lagi',
-    estimatedDuration: '3-4 jam',
-    assignedBy: 'Supervisor Teknik',
-    requirements: [
-      'Pastikan semua peralatan keselamatan digunakan',
-      'Dokumentasi setiap temuan',
-      'Laporkan jika ada komponen yang perlu diganti',
-    ],
+  // Fetch task data on mount
+  useEffect(() => {
+    loadTaskDetail();
+  }, []);
+
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadTaskDetail();
+    }, [])
+  );
+
+  const loadTaskDetail = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await tasksAPI.getMyTasks();
+
+      // Find the specific task by taken_task_id
+      const foundTask = response.data.find(
+        (t: any) => t.taken_task_id === params.taskId
+      );
+
+      if (foundTask) {
+        setTask(foundTask);
+        // Check if task is already in progress
+        if ((foundTask.computed_status || foundTask.status) === 'in progress') {
+          setIsTracking(true);
+          // Load sample location data for in-progress tasks
+          loadLocationHistory();
+        }
+      } else {
+        setError('Task not found');
+      }
+    } catch (error: any) {
+      console.error('Error loading task:', error);
+      setError(error.message || 'Failed to load task');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return '#EF4444';
-      case 'medium': return '#F59E0B';
-      case 'low': return '#10B981';
+  const loadLocationHistory = () => {
+    // Sample location data - in real app, fetch from API
+    const sampleLocations: LocationPoint[] = [
+      {
+        id: '1',
+        time: '14:30',
+        location: 'Gedung B - Lantai 5, Rooftop',
+        coordinates: '-6.1942, 106.8220',
+        notes: 'Inspeksi AC rooftop unit',
+      },
+      {
+        id: '2',
+        time: '13:15',
+        location: 'Gedung B - Lantai 4, Koridor Utama',
+        coordinates: '-6.1940, 106.8225',
+        notes: 'Pemeriksaan sistem HVAC',
+      },
+      {
+        id: '3',
+        time: '11:30',
+        location: 'Gedung B - Lantai 3, Ruang Server',
+        coordinates: '-6.1938, 106.8228',
+        notes: 'Pengecekan server dan network equipment',
+      },
+      {
+        id: '4',
+        time: '10:00',
+        location: 'Gedung B - Lantai 2, Ruang Elektrikal',
+        coordinates: '-6.1935, 106.8230',
+        notes: 'Inspeksi panel listrik utama',
+      },
+      {
+        id: '5',
+        time: '08:30',
+        location: 'Gedung B - Lantai 1, Lobby',
+        coordinates: '-6.1932, 106.8232',
+        notes: 'Check-in dan persiapan peralatan',
+      },
+    ];
+    setLocationHistory(sampleLocations);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#FFC107';
+      case 'in progress': return '#3B82F6';
+      case 'completed': return '#10B981';
+      case 'inactive': return '#6B7280';
       default: return '#6B7280';
     }
   };
 
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'URGENT';
-      case 'medium': return 'NORMAL';
-      case 'low': return 'RENDAH';
-      default: return 'UNKNOWN';
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'MENUNGGU';
+      case 'in progress': return 'BERJALAN';
+      case 'completed': return 'SELESAI';
+      case 'inactive': return 'TIDAK AKTIF';
+      default: return status.toUpperCase();
     }
   };
 
-  const handleStartTracking = () => {
-    // Show success animation
-    setShowSuccess(true);
+  const handleStartTracking = async () => {
+    if (!task) return;
+
+    try {
+      // Call API to start task
+      await tasksAPI.startTask(task.taken_task_id);
+
+      // Show success animation
+      setShowSuccess(true);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to start task');
+    }
   };
 
-  const handleSuccessFinish = () => {
+  const handleSuccessFinish = async () => {
     setShowSuccess(false);
     setIsTracking(true);
-    // Tracking started - no alert needed, animation provides feedback
+
+    // Reload task data to get updated status
+    await loadTaskDetail();
+
     // In real app: Start GPS tracking service
   };
 
-  const handleStopTracking = () => {
-    Alert.alert(
-      'Hentikan Tracking?',
-      'Apakah Anda yakin ingin menghentikan pelacakan lokasi?',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hentikan',
-          style: 'destructive',
-          onPress: () => {
-            setIsTracking(false);
-            Alert.alert('Tracking Dihentikan', 'Pelacakan lokasi telah dihentikan');
-          },
-        },
-      ]
-    );
+  const handleCreateNewReport = () => {
+    // Navigate to create new report with all task data
+    const taskInfo = encodeURIComponent(JSON.stringify({
+      taskId: task.taken_task_id,
+      taskTitle: taskData?.title,
+      taskLocation: taskData?.location,
+      taskDate: task.date,
+      taskStartTime: task.start_time,
+    }));
+    router.push(`/report-detail?reportId=new&taskData=${taskInfo}`);
   };
 
-  const handleCreateReport = () => {
-    router.push('/(tabs)/laporan');
-    // In real app: Navigate to report creation with task context
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <IconSymbol name="chevron.left" size={22} color="#1d1d1f" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>DETAIL TUGAS</Text>
+          <View style={styles.moreButton} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#000000" />
+          <Text style={styles.loadingText}>Loading task details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error || !task) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <IconSymbol name="chevron.left" size={22} color="#1d1d1f" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>DETAIL TUGAS</Text>
+          <View style={styles.moreButton} />
+        </View>
+        <View style={styles.errorContainer}>
+          <IconSymbol name="exclamationmark.triangle.fill" size={44} color="#EF4444" />
+          <Text style={styles.errorTitle}>{error || 'Task not found'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadTaskDetail}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const currentStatus = task.computed_status || task.status;
+  const taskData = task.task;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -120,54 +244,86 @@ export default function TaskDetailScreen() {
           <View style={styles.taskCard}>
             <View style={styles.taskHeader}>
               <View style={styles.taskHeaderLeft}>
-                <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(task.priority) }]}>
-                  <Text style={styles.priorityBadgeText}>{getPriorityText(task.priority)}</Text>
+                <View style={[styles.priorityBadge, { backgroundColor: getStatusColor(currentStatus) }]}>
+                  <Text style={styles.priorityBadgeText}>{getStatusText(currentStatus)}</Text>
                 </View>
-                <Text style={styles.taskId}>{task.id}</Text>
+                <Text style={styles.taskId}>{task.taken_task_id?.substring(0, 8)}</Text>
               </View>
             </View>
 
-            <Text style={styles.taskTitle}>{task.title}</Text>
-            <Text style={styles.taskDescription}>{task.description}</Text>
+            <Text style={styles.taskTitle}>{taskData?.title || 'No title'}</Text>
+            <Text style={styles.taskDescription}>{taskData?.description || 'No description'}</Text>
 
             <View style={styles.taskMeta}>
               <View style={styles.taskMetaItem}>
                 <IconSymbol name="location.fill" size={14} color="#86868b" />
-                <Text style={styles.taskMetaText}>{task.location}</Text>
+                <Text style={styles.taskMetaText}>{taskData?.location || 'No location'}</Text>
               </View>
+              {taskData?.start_time && taskData?.end_time && (
+                <View style={styles.taskMetaItem}>
+                  <IconSymbol name="clock.fill" size={14} color="#86868b" />
+                  <Text style={styles.taskMetaText}>
+                    Jam Kerja: {taskData.start_time} - {taskData.end_time}
+                  </Text>
+                </View>
+              )}
               <View style={styles.taskMetaItem}>
-                <IconSymbol name="clock.fill" size={14} color="#86868b" />
-                <Text style={styles.taskMetaText}>Estimasi: {task.estimatedDuration}</Text>
-              </View>
-              <View style={styles.taskMetaItem}>
-                <IconSymbol name="person.fill" size={14} color="#86868b" />
-                <Text style={styles.taskMetaText}>Diberikan oleh: {task.assignedBy}</Text>
+                <IconSymbol name="calendar" size={14} color="#86868b" />
+                <Text style={styles.taskMetaText}>Tanggal: {task.date}</Text>
               </View>
             </View>
 
-            <View style={styles.deadlineAlert}>
-              <IconSymbol name="exclamationmark.triangle.fill" size={16} color="#EF4444" />
-              <Text style={styles.deadlineAlertText}>Deadline: {task.deadline}</Text>
-            </View>
+            {!task.is_within_work_hours && currentStatus === 'inactive' && (
+              <View style={styles.deadlineAlert}>
+                <IconSymbol name="exclamationmark.triangle.fill" size={16} color="#F59E0B" />
+                <Text style={styles.deadlineAlertText}>
+                  Di luar jam kerja ({taskData?.start_time} - {taskData?.end_time})
+                </Text>
+              </View>
+            )}
+
+            {task.start_time && (
+              <View style={styles.startedAtContainer}>
+                <IconSymbol name="clock.fill" size={14} color="#3B82F6" />
+                <Text style={styles.startedAtText}>
+                  {currentStatus === 'in progress' ? 'Dimulai: ' : 'Dijadwalkan: '}
+                  {new Date(task.start_time).toLocaleString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Requirements */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PERSYARATAN</Text>
-          {task.requirements.map((requirement, index) => (
-            <View key={index} style={styles.requirementItem}>
-              <View style={styles.requirementBullet} />
-              <Text style={styles.requirementText}>{requirement}</Text>
-            </View>
-          ))}
-        </View>
+        {/* Create Report Section - Show for in progress tasks */}
+        {currentStatus === 'in progress' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>LAPORAN</Text>
+            <TouchableOpacity style={styles.createReportButton} onPress={handleCreateNewReport}>
+              <View style={styles.createReportContent}>
+                <View style={styles.createReportIcon}>
+                  <IconSymbol size={22} name="doc.text.fill" color="#FFFFFF" />
+                </View>
+                <View style={styles.createReportText}>
+                  <Text style={styles.createReportTitle}>Lihat Laporan</Text>
+                  <Text style={styles.createReportSubtitle}>Foto + Deskripsi atau Deskripsi Saja</Text>
+                </View>
+              </View>
+              <IconSymbol size={20} name="chevron.right" color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Tracking Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>STATUS TRACKING</Text>
-          <View style={[styles.trackingCard, isTracking && styles.trackingCardActive]}>
-            {isTracking ? (
+          <Text style={styles.sectionTitle}>STATUS TUGAS</Text>
+          <View style={[styles.trackingCard, currentStatus === 'in progress' && styles.trackingCardActive]}>
+            {currentStatus === 'in progress' ? (
               <>
                 <View style={styles.trackingHeader}>
                   <View style={styles.trackingStatusBadge}>
@@ -203,13 +359,34 @@ export default function TaskDetailScreen() {
                   </Text>
                 </View>
               </>
+            ) : currentStatus === 'pending' ? (
+              <View style={styles.trackingInactive}>
+                <IconSymbol name="clock.fill" size={44} color="#FFC107" />
+                <Text style={styles.trackingInactiveTitle}>Menunggu Dimulai</Text>
+                <Text style={styles.trackingInactiveText}>
+                  Geser tombol di bawah untuk memulai tugas ini
+                </Text>
+              </View>
+            ) : currentStatus === 'inactive' ? (
+              <View style={styles.trackingInactive}>
+                <IconSymbol name="exclamationmark.triangle.fill" size={44} color="#F59E0B" />
+                <Text style={styles.trackingInactiveTitle}>Di Luar Jam Kerja</Text>
+                <Text style={styles.trackingInactiveText}>
+                  Tugas ini hanya dapat dimulai pada jam kerja ({taskData?.start_time} - {taskData?.end_time})
+                </Text>
+              </View>
+            ) : currentStatus === 'completed' ? (
+              <View style={styles.trackingInactive}>
+                <IconSymbol name="checkmark.circle.fill" size={44} color="#10B981" />
+                <Text style={styles.trackingInactiveTitle}>Tugas Selesai</Text>
+                <Text style={styles.trackingInactiveText}>
+                  Tugas ini telah diselesaikan
+                </Text>
+              </View>
             ) : (
               <View style={styles.trackingInactive}>
-                <IconSymbol name="location.slash.fill" size={44} color="#86868b" />
-                <Text style={styles.trackingInactiveTitle}>Tracking Belum Dimulai</Text>
-                <Text style={styles.trackingInactiveText}>
-                  Mulai tracking untuk merekam lokasi Anda selama mengerjakan tugas ini
-                </Text>
+                <IconSymbol name="info.circle.fill" size={44} color="#86868b" />
+                <Text style={styles.trackingInactiveTitle}>Status: {getStatusText(currentStatus)}</Text>
               </View>
             )}
           </View>
@@ -217,47 +394,90 @@ export default function TaskDetailScreen() {
 
         {/* Action Buttons */}
         <View style={styles.section}>
-          {!isTracking ? (
+          {currentStatus === 'pending' && task.is_within_work_hours ? (
             <SwipeableButton
               onSwipeComplete={handleStartTracking}
             />
-          ) : (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[styles.secondaryButton, { flex: 1 }]}
-                onPress={handleStopTracking}
-              >
-                <IconSymbol name="stop.fill" size={18} color="#EF4444" />
-                <Text style={styles.secondaryButtonText}>Hentikan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.primaryButton, { flex: 1 }]}
-                onPress={handleCreateReport}
-              >
-                <IconSymbol name="camera.fill" size={18} color="#FFFFFF" />
-                <Text style={styles.primaryButtonText}>Buat Laporan</Text>
-              </TouchableOpacity>
+          ) : currentStatus === 'inactive' ? (
+            <View style={styles.inactiveButtonContainer}>
+              <IconSymbol name="lock.fill" size={18} color="#6B7280" />
+              <Text style={styles.inactiveButtonText}>Tidak dapat dimulai di luar jam kerja</Text>
             </View>
-          )}
+          ) : currentStatus === 'completed' ? (
+            <TouchableOpacity
+              style={styles.completedButton}
+              onPress={() => router.back()}
+            >
+              <IconSymbol name="arrow.left.circle.fill" size={18} color="#10B981" />
+              <Text style={styles.completedButtonText}>Kembali</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Location History */}
-        {isTracking && locationHistory.length > 0 && (
+        {currentStatus === 'in progress' && locationHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>RIWAYAT LOKASI</Text>
-            <View style={styles.locationHistory}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>RIWAYAT LOKASI</Text>
+              <View style={styles.locationCountBadge}>
+                <IconSymbol size={12} name="location.fill" color="#1d1d1f" />
+                <Text style={styles.locationCountText}>{locationHistory.length} Lokasi</Text>
+              </View>
+            </View>
+
+            {/* Summary Stats */}
+            <View style={styles.locationStatsCard}>
+              <View style={styles.locationStat}>
+                <IconSymbol size={18} name="mappin.circle.fill" color="#1d1d1f" />
+                <Text style={styles.locationStatValue}>{locationHistory.length}</Text>
+                <Text style={styles.locationStatLabel}>Dikunjungi</Text>
+              </View>
+              <View style={styles.locationStatDivider} />
+              <View style={styles.locationStat}>
+                <IconSymbol size={18} name="clock.fill" color="#1d1d1f" />
+                <Text style={styles.locationStatValue}>6h</Text>
+                <Text style={styles.locationStatLabel}>Durasi</Text>
+              </View>
+              <View style={styles.locationStatDivider} />
+              <View style={styles.locationStat}>
+                <IconSymbol size={18} name="figure.walk" color="#1d1d1f" />
+                <Text style={styles.locationStatValue}>0.8</Text>
+                <Text style={styles.locationStatLabel}>KM</Text>
+              </View>
+            </View>
+
+            {/* Location Timeline */}
+            <View style={styles.locationTimeline}>
               {locationHistory.map((location, index) => (
-                <View key={location.id} style={styles.locationItem}>
-                  <View style={styles.locationLeft}>
-                    <Text style={styles.locationTime}>{location.time}</Text>
-                    <View style={styles.locationLine} />
+                <View key={location.id} style={styles.timelineItem}>
+                  <View style={styles.timelineLeft}>
+                    <Text style={styles.timelineTime}>{location.time}</Text>
+                    <View style={styles.timelineDotContainer}>
+                      <View style={[
+                        styles.timelineDot,
+                        index === 0 && styles.timelineDotActive
+                      ]}>
+                        <IconSymbol
+                          size={12}
+                          name={index === 0 ? "checkmark" : "location.fill"}
+                          color="#FFFFFF"
+                        />
+                      </View>
+                      {index < locationHistory.length - 1 && (
+                        <View style={styles.timelineLine} />
+                      )}
+                    </View>
                   </View>
-                  <View style={styles.locationCard}>
-                    <View style={styles.locationDot} />
-                    <Text style={styles.locationAddress}>{location.address}</Text>
-                    <Text style={styles.locationCoords}>
-                      {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                    </Text>
+
+                  <View style={styles.timelineCard}>
+                    <Text style={styles.timelineLocation}>{location.location}</Text>
+                    <View style={styles.timelineCoords}>
+                      <IconSymbol size={11} name="ruler" color="#86868b" />
+                      <Text style={styles.timelineCoordsText}>{location.coordinates}</Text>
+                    </View>
+                    {location.notes && (
+                      <Text style={styles.timelineNotes}>{location.notes}</Text>
+                    )}
                   </View>
                 </View>
               ))}
@@ -326,6 +546,28 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  locationCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  locationCountText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1d1d1f',
   },
   taskCard: {
     backgroundColor: '#FFFFFF',
@@ -583,58 +825,226 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#EF4444',
   },
-  locationHistory: {
-    gap: 0,
-  },
-  locationItem: {
+  locationStatsCard: {
     flexDirection: 'row',
-    gap: 16,
-  },
-  locationLeft: {
-    alignItems: 'center',
-    width: 60,
-  },
-  locationTime: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#86868b',
-    marginBottom: 8,
-  },
-  locationLine: {
-    width: 1,
-    flex: 1,
-    backgroundColor: '#e5e5ea',
-    minHeight: 40,
-  },
-  locationCard: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 14,
     marginBottom: 12,
-    position: 'relative',
     borderWidth: 1,
     borderColor: '#e5e5ea',
   },
-  locationDot: {
-    position: 'absolute',
-    left: -24,
-    top: 16,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#1d1d1f',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+  locationStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
   },
-  locationAddress: {
-    fontSize: 13,
-    fontWeight: '500',
+  locationStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#1d1d1f',
-    marginBottom: 4,
   },
-  locationCoords: {
+  locationStatLabel: {
+    fontSize: 10,
+    color: '#86868b',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    fontWeight: '500',
+  },
+  locationStatDivider: {
+    width: 1,
+    backgroundColor: '#e5e5ea',
+    marginHorizontal: 6,
+  },
+  locationTimeline: {
+    gap: 0,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  timelineLeft: {
+    alignItems: 'center',
+    width: 60,
+  },
+  timelineTime: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#86868b',
+    marginBottom: 8,
+  },
+  timelineDotContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  timelineDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1d1d1f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  timelineDotActive: {
+    backgroundColor: '#10B981',
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#e5e5ea',
+    marginTop: 4,
+    minHeight: 40,
+  },
+  timelineCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  timelineLocation: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    marginBottom: 6,
+  },
+  timelineCoords: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6,
+  },
+  timelineCoordsText: {
     fontSize: 11,
     color: '#86868b',
+    fontFamily: 'monospace',
+  },
+  timelineNotes: {
+    fontSize: 12,
+    color: '#86868b',
+    lineHeight: 18,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e5ea',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#86868b',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  startedAtContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 12,
+  },
+  startedAtText: {
+    fontSize: 12,
+    color: '#1E40AF',
+    fontWeight: '500',
+  },
+  inactiveButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 14,
+    borderRadius: 8,
+  },
+  inactiveButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  completedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 8,
+  },
+  completedButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  createReportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#000000',
+    borderRadius: 12,
+    padding: 16,
+  },
+  createReportContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  createReportIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  createReportText: {
+    flex: 1,
+  },
+  createReportTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  createReportSubtitle: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
   },
 });

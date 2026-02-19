@@ -6,6 +6,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\TaskController;
 use App\Http\Controllers\API\TakenTaskController;
 use App\Http\Controllers\API\LocationController;
+use App\Http\Controllers\API\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::get('/tasks/statistics', [TaskController::class, 'statistics']);
         Route::get('/tasks/by-location', [TaskController::class, 'byLocation']);
+        Route::post('/tasks/{id}/reset-auto', [TaskController::class, 'resetToAuto']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
@@ -104,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Employee Task Routes (view and manage own tasks)
     Route::prefix('my-tasks')->group(function () {
         Route::get('/', [TakenTaskController::class, 'myTasks']);
+        Route::get('/statistics', [TakenTaskController::class, 'myStatistics']);
         Route::put('/{id}/start', [TakenTaskController::class, 'startTask']);
         Route::put('/{id}/complete', [TakenTaskController::class, 'completeTask']);
     });
@@ -129,6 +132,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users/{userId}/statistics', [LocationController::class, 'userStatistics']); // User statistics
         Route::get('/nearby', [LocationController::class, 'getNearby']); // Find locations near coordinates
         Route::delete('/{locationId}', [LocationController::class, 'destroy']); // Delete location record
+    });
+
+    // Report Routes
+
+    // Employee routes - create and view own reports
+    Route::prefix('reports')->group(function () {
+        Route::post('/', [ReportController::class, 'store']); // Create new report
+        Route::get('/my', [ReportController::class, 'myReports']); // Get own reports
+        Route::get('/{id}', [ReportController::class, 'show']); // View report details
+        Route::put('/{id}', [ReportController::class, 'update']); // Update own report
+        Route::get('/statistics/my', [ReportController::class, 'statistics']); // Get own statistics
+    });
+
+    // Admin report management routes
+    Route::middleware('role:superadmin|admin')->prefix('admin/reports')->group(function () {
+        Route::get('/', [ReportController::class, 'index']); // Get all reports
+        Route::get('/tasks/{taskId}', [ReportController::class, 'taskReports']); // Get reports for specific task
+        Route::get('/statistics', [ReportController::class, 'statistics']); // Get overall statistics
+        Route::delete('/{id}', [ReportController::class, 'destroy']); // Delete report
     });
 
     // Add your other protected routes here

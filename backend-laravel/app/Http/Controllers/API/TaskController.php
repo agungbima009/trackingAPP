@@ -36,7 +36,18 @@ class TaskController extends Controller
             });
         }
 
-        // Sort by
+        // Add subquery to check for completed taken tasks
+        $query->addSelect([
+            'has_completed_taken_task' => TakenTaskModel::selectRaw('COUNT(*)')
+                ->whereColumn('taken_tasks.task_id', 'tasks.task_id')
+                ->where('taken_tasks.status', 'completed')
+                ->limit(1)
+        ]);
+
+        // Sort by completed taken tasks first (descending so tasks with completed taken tasks appear first)
+        $query->orderByDesc('has_completed_taken_task');
+
+        // Then sort by user preference
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
@@ -55,15 +66,27 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location' => 'required|string|max:255',
-            'status' => 'required|in:pending,active,completed',
+            'status' => 'nullable|in:pending,active,completed,inactive',
+            'start_time' => 'nullable|date_format:H:i:s,H:i',
+            'end_time' => 'nullable|date_format:H:i:s,H:i|after:start_time',
         ]);
 
-        $task = TasksModel::create([
+        $taskData = [
             'title' => $request->title,
             'description' => $request->description,
             'location' => $request->location,
-            'status' => $request->status,
-        ]);
+            'start_time' => $request->start_time ?? '08:00:00',
+            'end_time' => $request->end_time ?? '17:00:00',
+            'manual_override' => false,
+        ];
+
+        // If status is provided, set manual_override to true
+        if ($request->has('status')) {
+            $taskData['status'] = $request->status;
+            $taskData['manual_override'] = true;
+        }
+
+        $task = TasksModel::create($taskData);
 
         return response()->json([
             'message' => 'Task created successfully',
@@ -103,15 +126,26 @@ class TaskController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
             'location' => 'sometimes|required|string|max:255',
-            'status' => 'sometimes|required|in:pending,active,completed',
+            'status' => 'sometimes|required|in:pending,active,completed,inactive',
+            'start_time' => 'nullable|date_format:H:i:s,H:i',
+            'end_time' => 'nullable|date_format:H:i:s,H:i|after:start_time',
         ]);
 
-        $task->update($request->only([
+        $updateData = $request->only([
             'title',
             'description',
             'location',
-            'status'
-        ]));
+            'start_time',
+            'end_time'
+        ]);
+
+        // If status is being updated, set manual_override to true
+        if ($request->has('status')) {
+            $updateData['status'] = $request->status;
+            $updateData['manual_override'] = true;
+        }
+
+        $task->update($updateData);
 
         return response()->json([
             'message' => 'Task updated successfully',
@@ -204,6 +238,28 @@ class TaskController extends Controller
 
         return response()->json([
             'locations' => $tasks
+        ]);
+    }
+
+    /**
+     * Reset task to automatic status mode (based on time)
+     */
+    public function resetToAuto($id)
+    {
+        $task = TasksModel::findOrFail($id);
+
+        $task->update([
+            'manual_override' => false
+        ]);
+
+        // Refresh to get computed status
+        $task->refresh();
+
+        return response()->json([
+            'message' => 'Task reset to automatic status mode',
+            'task' => $task->load('takenTasks'),
+            'current_status' => $task->status,
+            'is_within_hours' => $task->isWithinWorkingHours()
         ]);
     }
 }

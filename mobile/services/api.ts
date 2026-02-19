@@ -235,6 +235,16 @@ export const tasksAPI = {
       throw new Error(error.response?.data?.message || 'Failed to complete task');
     }
   },
+
+  // Get my task statistics
+  getMyStatistics: async (): Promise<any> => {
+    try {
+      const response = await api.get('/my-tasks/statistics');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch statistics');
+    }
+  },
 };
 
 // Location Tracking API calls
@@ -379,6 +389,94 @@ export const profileAPI = {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to update profile');
+    }
+  },
+};
+
+// Report API calls
+export const reportsAPI = {
+  // Create a new report
+  createReport: async (
+    takenTaskId: string,
+    report: string,
+    photos: string[]
+  ): Promise<any> => {
+    try {
+      const response = await api.post('/reports', {
+        taken_task_id: takenTaskId,
+        report: report,
+        photos: photos, // Array of base64 encoded images
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to create report'
+      );
+    }
+  },
+
+  // Get my reports
+  getMyReports: async (
+    startDate?: string,
+    endDate?: string,
+    perPage: number = 15
+  ): Promise<any> => {
+    try {
+      const params: any = { per_page: perPage };
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+
+      const response = await api.get('/reports/my', { params });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch reports'
+      );
+    }
+  },
+
+  // Get report details
+  getReportDetails: async (reportId: string): Promise<any> => {
+    try {
+      const response = await api.get(`/reports/${reportId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch report details'
+      );
+    }
+  },
+
+  // Update report
+  updateReport: async (
+    reportId: string,
+    report: string,
+    photos?: string[]
+  ): Promise<any> => {
+    try {
+      const data: any = { report };
+      if (photos) {
+        data.photos = photos;
+      }
+
+      const response = await api.put(`/reports/${reportId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to update report'
+      );
+    }
+  },
+
+  // Get my report statistics
+  getMyStatistics: async (): Promise<any> => {
+    try {
+      const response = await api.get('/reports/statistics/my');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch statistics'
+      );
     }
   },
 };
