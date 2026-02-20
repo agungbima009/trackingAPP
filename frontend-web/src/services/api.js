@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuth } from '../utils/auth';
 
 // API Configuration
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
@@ -32,9 +33,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // Unauthorized - clear auth and redirect to login
+      clearAuth();
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -82,8 +82,7 @@ export const logout = async () => {
   try {
     await api.post('/auth/logout');
   } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuth();
   }
 };
 
@@ -95,8 +94,7 @@ export const logoutAll = async () => {
   try {
     await api.post('/auth/logout-all');
   } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuth();
   }
 };
 

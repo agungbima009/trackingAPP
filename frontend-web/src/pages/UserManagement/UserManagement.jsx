@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, getUserDetails, createUser, updateUserProfile, updateUserStatus, deleteUser, getDepartments } from '../../services/api';
+import { canEditUser, canDeleteUser, canChangeUserStatus, getCurrentUser, getAllowedRolesToCreate } from '../../utils/auth';
 import './UserManagement.css';
 
 function UserManagement() {
@@ -32,6 +33,9 @@ function UserManagement() {
     status: '',
     role: ''
   });
+
+  // Get allowed roles that current user can create
+  const allowedRolesToCreate = getAllowedRolesToCreate();
 
   // Toast notification function
   const showToast = (message, type = 'success') => {
@@ -94,6 +98,8 @@ function UserManagement() {
     setShowModal(true);
     setEditMode(false);
     setCurrentUserId(null);
+    // Set default role to first allowed role
+    const defaultRole = allowedRolesToCreate.length > 0 ? allowedRolesToCreate[0] : 'employee';
     setFormData({
       name: '',
       email: '',
@@ -104,7 +110,7 @@ function UserManagement() {
       position: '',
       address: '',
       status: 'active',
-      role: 'employee'
+      role: defaultRole
     });
   };
 
@@ -196,6 +202,13 @@ function UserManagement() {
       const response = await getUserDetails(userId);
       const user = response.user;
 
+      // Check if current user can edit this user
+      if (!canEditUser(user)) {
+        showToast('You do not have permission to edit this user', 'error');
+        setLoading(false);
+        return;
+      }
+
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -220,6 +233,25 @@ function UserManagement() {
   };
 
   const handleDelete = async (userId) => {
+    // Find the user to check permissions
+    const targetUser = users.find(u => u.id === userId);
+    
+    if (!targetUser) {
+      showToast('User not found', 'error');
+      return;
+    }
+
+    // Check if current user can delete this user
+    if (!canDeleteUser(targetUser)) {
+      const currentUser = getCurrentUser();
+      if (currentUser.id === targetUser.id) {
+        showToast('You cannot delete your own account', 'error');
+      } else {
+        showToast('You do not have permission to delete this user', 'error');
+      }
+      return;
+    }
+
     showConfirmModal(
       'Delete User',
       'Are you sure you want to delete this user? This action cannot be undone.',
@@ -239,6 +271,25 @@ function UserManagement() {
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
+    // Find the user to check permissions
+    const targetUser = users.find(u => u.id === userId);
+    
+    if (!targetUser) {
+      showToast('User not found', 'error');
+      return;
+    }
+
+    // Check if current user can change this user's status
+    if (!canChangeUserStatus(targetUser)) {
+      const currentUser = getCurrentUser();
+      if (currentUser.id === targetUser.id) {
+        showToast('You cannot change your own status', 'error');
+      } else {
+        showToast('You do not have permission to change this user\'s status', 'error');
+      }
+      return;
+    }
+
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
     showConfirmModal(
@@ -455,7 +506,9 @@ function UserManagement() {
                       <button
                         className="action-btn edit-btn"
                         onClick={() => handleEdit(user.id)}
-                        title="Edit"
+                        title={canEditUser(user) ? "Edit" : "No permission to edit"}
+                        disabled={!canEditUser(user)}
+                        style={{ opacity: canEditUser(user) ? 1 : 0.5, cursor: canEditUser(user) ? 'pointer' : 'not-allowed' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.99967 14.3334L2.99967 11L11.333 2.00004Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -464,7 +517,9 @@ function UserManagement() {
                       <button
                         className="action-btn toggle-btn"
                         onClick={() => handleToggleStatus(user.id, user.status)}
-                        title={user.status === 'active' ? 'Deactivate' : 'Activate'}
+                        title={canChangeUserStatus(user) ? (user.status === 'active' ? 'Deactivate' : 'Activate') : "No permission to change status"}
+                        disabled={!canChangeUserStatus(user)}
+                        style={{ opacity: canChangeUserStatus(user) ? 1 : 0.5, cursor: canChangeUserStatus(user) ? 'pointer' : 'not-allowed' }}
                       >
                         {user.status === 'active' ? (
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -479,7 +534,9 @@ function UserManagement() {
                       <button
                         className="action-btn delete-btn"
                         onClick={() => handleDelete(user.id)}
-                        title="Delete"
+                        title={canDeleteUser(user) ? "Delete" : "No permission to delete"}
+                        disabled={!canDeleteUser(user)}
+                        style={{ opacity: canDeleteUser(user) ? 1 : 0.5, cursor: canDeleteUser(user) ? 'pointer' : 'not-allowed' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M2 4H3.33333H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -588,10 +645,20 @@ function UserManagement() {
                       onChange={handleInputChange}
                       required={!editMode}
                     >
-                      <option value="employee">Employee</option>
-                      <option value="admin">Admin</option>
-                      <option value="superadmin">Superadmin</option>
+                      {allowedRolesToCreate.map((role) => (
+                        <option key={role} value={role}>
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </option>
+                      ))}
                     </select>
+                    <small className="role-hint">
+                      {allowedRolesToCreate.length === 1 && allowedRolesToCreate[0] === 'employee' && (
+                        'As Admin, you can only create Employee accounts'
+                      )}
+                      {allowedRolesToCreate.length === 2 && (
+                        'As Superadmin, you can create Admin and Employee accounts'
+                      )}
+                    </small>
                   </div>
 
                   <div className="form-group">

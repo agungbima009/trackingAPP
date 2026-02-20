@@ -6,26 +6,8 @@ import Monitoring from './pages/Monitoring/Monitoring'
 import Task from './pages/Task/Task'
 import Taken from './pages/Taken/Taken'
 import UserManagement from './pages/UserManagement/UserManagement'
-import Sidebar from './pages/shared/Sidebar'
+import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
-
-// Protected Route Component
-function ProtectedRoute({ children }) {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-  
-  return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="app-content">
-        {children}
-      </div>
-    </div>
-  )
-}
 
 function App() {
   return (
@@ -33,28 +15,38 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Dashboard - Admin and Superadmin only (Employee role blocked from web) */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
+          <ProtectedRoute permission="DASHBOARD">
             <Dashboard />
           </ProtectedRoute>
         } />
+        
+        {/* Monitoring - Admin and Superadmin only */}
         <Route path="/monitoring" element={
-          <ProtectedRoute>
+          <ProtectedRoute permission="MONITORING">
             <Monitoring />
           </ProtectedRoute>
         } />
+        
+        {/* Task Management - Admin and Superadmin only */}
         <Route path="/task" element={
-          <ProtectedRoute>
+          <ProtectedRoute permission="TASK">
             <Task />
           </ProtectedRoute>
         } />
+        
+        {/* Taken Tasks - Admin and Superadmin only */}
         <Route path="/taken" element={
-          <ProtectedRoute>
+          <ProtectedRoute permission="TAKEN">
             <Taken />
           </ProtectedRoute>
         } />
+        
+        {/* User Management - Admin and Superadmin only */}
         <Route path="/users" element={
-          <ProtectedRoute>
+          <ProtectedRoute permission="USER_MANAGEMENT">
             <UserManagement />
           </ProtectedRoute>
         } />

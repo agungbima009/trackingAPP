@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../../services/api';
+import { canAccessPage, getSessionTimeRemaining } from '../../utils/auth';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -8,6 +9,7 @@ function Sidebar() {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [sessionTime, setSessionTime] = useState(0);
 
   // Get user data from localStorage
   React.useEffect(() => {
@@ -20,6 +22,16 @@ function Sidebar() {
         console.error('Error parsing user data:', error);
       }
     }
+
+    // Update session time every minute
+    const updateSessionTime = () => {
+      setSessionTime(getSessionTimeRemaining());
+    };
+    
+    updateSessionTime(); // Initial call
+    const interval = setInterval(updateSessionTime, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
@@ -41,19 +53,49 @@ function Sidebar() {
     setShowUserMenu(!showUserMenu);
   };
 
-  const menuItems = [
-    { icon: '/icon/Control-Panel.png', label: 'Dashboard', path: '/dashboard' },
-    { icon: '/icon/System-Report.png', label: 'Monitoring', path: '/monitoring' },
-    { icon: '/icon/Clipboard.png', label: 'Task', path: '/task' },
-    { icon: '/icon/Audit.png', label: 'Taken', path: '/taken' },
-    { icon: '/icon/Add-User-Male.png', label: 'Users', path: '/users' }
+  // Define all menu items with their required permissions
+  const allMenuItems = [
+    { 
+      icon: '/icon/Control-Panel.png', 
+      label: 'Dashboard', 
+      path: '/dashboard',
+      permission: 'DASHBOARD'
+    },
+    { 
+      icon: '/icon/System-Report.png', 
+      label: 'Monitoring', 
+      path: '/monitoring',
+      permission: 'MONITORING'
+    },
+    { 
+      icon: '/icon/Clipboard.png', 
+      label: 'Task', 
+      path: '/task',
+      permission: 'TASK'
+    },
+    { 
+      icon: '/icon/Audit.png', 
+      label: 'Taken', 
+      path: '/taken',
+      permission: 'TAKEN'
+    },
+    { 
+      icon: '/icon/Add-User-Male.png', 
+      label: 'Users', 
+      path: '/users',
+      permission: 'USER_MANAGEMENT'
+    }
   ];
 
-  // const documentItems = [
-  //   { icon: '📚', label: 'Data Library', path: '/documents/library' },
-  //   { icon: '📄', label: 'Reports', path: '/documents/reports' },
-  //   { icon: '✍️', label: 'Word Assistant', path: '/documents/assistant' }
-  // ];
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => canAccessPage(item.permission));
+
+  // Get user role display name
+  const getUserRoleDisplay = () => {
+    if (!currentUser?.roles || currentUser.roles.length === 0) return 'User';
+    const roleName = currentUser.roles[0].name;
+    return roleName.charAt(0).toUpperCase() + roleName.slice(1);
+  };
 
   return (
     <aside className="sidebar">
@@ -78,30 +120,6 @@ function Sidebar() {
             </Link>
           ))}
         </ul>
-
-        {/* <div className="nav-section">
-          <h3 className="section-title">Documents</h3>
-          <ul className="nav-list">
-            {documentItems.map((item, index) => (
-              <Link
-                key={index}
-                to={item.path}
-                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-              >
-                {item.icon.startsWith('/') ? (
-                  <img src={item.icon} alt={item.label} className="nav-icon" />
-                ) : (
-                  <span className="nav-icon">{item.icon}</span>
-                )}
-                <span className="nav-label">{item.label}</span>
-              </Link>
-            ))}
-          </ul>
-          <button className="more-button">
-            <span>...</span>
-            <span>More</span>
-          </button>
-        </div> */}
       </nav>
 
       <div className="sidebar-footer">
@@ -109,11 +127,17 @@ function Sidebar() {
           <div className="user-avatar">{currentUser?.name?.charAt(0).toUpperCase() || 'U'}</div>
           <div className="user-info">
             <span className="user-name">{currentUser?.name || 'User'}</span>
-            <span className="user-email">{currentUser?.email || 'user@example.com'}</span>
+            <span className="user-role">{getUserRoleDisplay()}</span>
           </div>
           <button className="user-menu" onClick={toggleUserMenu}>⋮</button>
           {showUserMenu && (
             <div className="user-menu-dropdown">
+              {sessionTime > 0 && (
+                <div className="menu-item session-info">
+                  <span className="session-icon">⏱</span>
+                  Session: {sessionTime}m
+                </div>
+              )}
               <button className="menu-item" onClick={handleLogout}>
                 <img src="/icon/Logout.png" alt="Logout" className="menu-icon" />
                 Logout
