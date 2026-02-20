@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SwipeableButton } from '@/components/swipeable-button';
 import SuccessCheckOverlay from '@/components/SuccessCheckOverlay';
-import { tasksAPI } from '@/services/api';
+import { tasksAPI, locationsAPI } from '@/services/api';
 import LocationTrackingService from '@/services/locationTracking';
 
 
@@ -27,6 +27,8 @@ export default function TaskDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nextTrackingTime, setNextTrackingTime] = useState<Date | null>(null);
+  const [locationStats, setLocationStats] = useState<any>(null);
+  const [currentLocation, setCurrentLocation] = useState<string>('');
 
   // Fetch task data on mount
   useEffect(() => {
@@ -47,6 +49,26 @@ export default function TaskDetailScreen() {
       // Only stop when user explicitly completes the task
     };
   }, []);
+
+  // Periodic refresh of location data while task is in progress
+  useEffect(() => {
+    let refreshInterval: ReturnType<typeof setInterval>;
+    const currentStatus = task?.computed_status || task?.status;
+
+    if (currentStatus === 'in progress' && task) {
+      // Refresh location data every 5 minutes
+      refreshInterval = setInterval(() => {
+        loadLocationData(task.taken_task_id);
+        calculateNextTrackingTime(task.taken_task_id);
+      }, 5 * 60 * 1000);
+    }
+
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [task]);
 
   // Format next tracking time
   const getNextTrackingTimeText = () => {
@@ -82,18 +104,17 @@ export default function TaskDetailScreen() {
         // Check if task is already in progress
         if ((foundTask.computed_status || foundTask.status) === 'in progress') {
           setIsTracking(true);
-          // Load sample location data for in-progress tasks
-          loadLocationHistory();
+
+          // Load real location data from API
+          await loadLocationData(foundTask.taken_task_id);
 
           // Resume location tracking if not already active
           if (!LocationTrackingService.isActive()) {
             await LocationTrackingService.startTracking(foundTask.taken_task_id);
           }
 
-          // Set next tracking time
-          const nextTime = new Date();
-          nextTime.setHours(nextTime.getHours() + 1);
-          setNextTrackingTime(nextTime);
+          // Calculate next tracking time based on last location
+          await calculateNextTrackingTime(foundTask.taken_task_id);
         }
       } else {
         setError('Task not found');
@@ -106,46 +127,76 @@ export default function TaskDetailScreen() {
     }
   };
 
-  const loadLocationHistory = () => {
-    // Sample location data - in real app, fetch from API
-    const sampleLocations: LocationPoint[] = [
-      {
-        id: '1',
-        time: '14:30',
-        location: 'Gedung B - Lantai 5, Rooftop',
-        coordinates: '-6.1942, 106.8220',
-        notes: 'Inspeksi AC rooftop unit',
-      },
-      {
-        id: '2',
-        time: '13:15',
-        location: 'Gedung B - Lantai 4, Koridor Utama',
-        coordinates: '-6.1940, 106.8225',
-        notes: 'Pemeriksaan sistem HVAC',
-      },
-      {
-        id: '3',
-        time: '11:30',
-        location: 'Gedung B - Lantai 3, Ruang Server',
-        coordinates: '-6.1938, 106.8228',
-        notes: 'Pengecekan server dan network equipment',
-      },
-      {
-        id: '4',
-        time: '10:00',
-        location: 'Gedung B - Lantai 2, Ruang Elektrikal',
-        coordinates: '-6.1935, 106.8230',
-        notes: 'Inspeksi panel listrik utama',
-      },
-      {
-        id: '5',
-        time: '08:30',
-        location: 'Gedung B - Lantai 1, Lobby',
-        coordinates: '-6.1932, 106.8232',
-        notes: 'Check-in dan persiapan peralatan',
-      },
-    ];
-    setLocationHistory(sampleLocations);
+  const loadLocationData = async (takenTaskId: string) => {
+    try {
+      // Fetch real location data from API
+      const response = await locationsAPI.getTaskLocations(takenTaskId);
+
+      if (response.locations && response.locations.data) {
+        // Transform API data to LocationPoint format
+        const transformedLocations: LocationPoint[] = response.locations.data.map((loc: any) => ({
+          id: loc.location_id,
+          time: new Date(loc.recorded_at).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          location: loc.address || `${loc.latitude}, ${loc.longitude}`,
+          coordinates: `${loc.latitude}, ${loc.longitude}`,
+          notes: loc.tracking_status === 'manual' ? 'Dicatat manual' : 'Dicatat otomatis',
+        }));
+
+        setLocationHistory(transformedLocations);
+
+        // Set current location (most recent)
+        if (transformedLocations.length > 0) {
+          setCurrentLocation(transformedLocations[0].location);
+        }
+
+        // Fetch route stats (need to pass user_id from response)
+        if (response.locations.data.length > 0) {
+          const userId = response.locations.data[0].user_id;
+          const routeResponse = await locationsAPI.getTaskRoute(takenTaskId, userId);
+          setLocationStats({
+            totalLocations: routeResponse.total_points || 0,
+            totalDistance: routeResponse.total_distance_km || 0,
+            duration: calculateDuration(routeResponse.start_time, routeResponse.end_time),
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Error loading location data:', error);
+      // Keep empty arrays on error
+      setLocationHistory([]);
+      setLocationStats(null);
+    }
+  };
+
+  const calculateDuration = (startTime?: string, endTime?: string): string => {
+    if (!startTime || !endTime) return '0h';
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+    const hours = Math.round((end - start) / (1000 * 60 * 60) * 10) / 10;
+    return `${hours}h`;
+  };
+
+  const calculateNextTrackingTime = async (takenTaskId: string) => {
+    try {
+      const response = await locationsAPI.getTaskLocations(takenTaskId);
+
+      if (response.locations && response.locations.data && response.locations.data.length > 0) {
+        const lastLocation = response.locations.data[0]; // Most recent
+        const lastRecordedTime = new Date(lastLocation.recorded_at);
+        const nextTime = new Date(lastRecordedTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+        setNextTrackingTime(nextTime);
+      } else {
+        // No locations yet, next tracking is 1 hour from now
+        const nextTime = new Date();
+        nextTime.setHours(nextTime.getHours() + 1);
+        setNextTrackingTime(nextTime);
+      }
+    } catch (error) {
+      console.error('Error calculating next tracking time:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -187,17 +238,25 @@ export default function TaskDetailScreen() {
     setIsTracking(true);
 
     // Reload task data to get updated status
-    await loadTaskDetail();
+    const response = await tasksAPI.getMyTasks();
+    const updatedTask = response.data.find(
+      (t: any) => t.taken_task_id === params.taskId
+    );
 
-    // Start GPS tracking service - records location every hour
-    if (task) {
-      const trackingStarted = await LocationTrackingService.startTracking(task.taken_task_id);
+    if (updatedTask) {
+      setTask(updatedTask);
+
+      // Start GPS tracking service - records location every hour
+      const trackingStarted = await LocationTrackingService.startTracking(updatedTask.taken_task_id);
 
       if (trackingStarted) {
-        // Calculate next tracking time (1 hour from now)
+        // Calculate next tracking time (1 hour from now since this is the first location)
         const nextTime = new Date();
         nextTime.setHours(nextTime.getHours() + 1);
         setNextTrackingTime(nextTime);
+
+        // Load initial location data
+        await loadLocationData(updatedTask.taken_task_id);
 
         Alert.alert(
           'Pelacakan Dimulai',
@@ -397,29 +456,31 @@ export default function TaskDetailScreen() {
                 <View style={styles.trackingStats}>
                   <View style={styles.trackingStat}>
                     <IconSymbol name="location.fill" size={18} color="#1d1d1f" />
-                    <Text style={styles.trackingStatValue}>12</Text>
+                    <Text style={styles.trackingStatValue}>{locationStats?.totalLocations || 0}</Text>
                     <Text style={styles.trackingStatLabel}>LOKASI</Text>
                   </View>
                   <View style={styles.trackingDivider} />
                   <View style={styles.trackingStat}>
                     <IconSymbol name="clock.fill" size={18} color="#1d1d1f" />
-                    <Text style={styles.trackingStatValue}>1.5</Text>
-                    <Text style={styles.trackingStatLabel}>JAM</Text>
+                    <Text style={styles.trackingStatValue}>{locationStats?.duration || '0h'}</Text>
+                    <Text style={styles.trackingStatLabel}>DURASI</Text>
                   </View>
                   <View style={styles.trackingDivider} />
                   <View style={styles.trackingStat}>
                     <IconSymbol name="map.fill" size={18} color="#1d1d1f" />
-                    <Text style={styles.trackingStatValue}>2.3</Text>
+                    <Text style={styles.trackingStatValue}>{locationStats?.totalDistance || 0}</Text>
                     <Text style={styles.trackingStatLabel}>KM</Text>
                   </View>
                 </View>
 
-                <View style={styles.currentLocation}>
-                  <IconSymbol name="location.fill" size={14} color="#1d1d1f" />
-                  <Text style={styles.currentLocationText}>
-                    Gedung Utama, Lantai 3 - Ruang Server
-                  </Text>
-                </View>
+                {currentLocation && (
+                  <View style={styles.currentLocation}>
+                    <IconSymbol name="location.fill" size={14} color="#1d1d1f" />
+                    <Text style={styles.currentLocationText}>
+                      {currentLocation}
+                    </Text>
+                  </View>
+                )}
 
                 {nextTrackingTime && (
                   <View style={styles.nextTrackingInfo}>
@@ -506,13 +567,13 @@ export default function TaskDetailScreen() {
               <View style={styles.locationStatDivider} />
               <View style={styles.locationStat}>
                 <IconSymbol size={18} name="clock.fill" color="#1d1d1f" />
-                <Text style={styles.locationStatValue}>6h</Text>
+                <Text style={styles.locationStatValue}>{locationStats?.duration || '0h'}</Text>
                 <Text style={styles.locationStatLabel}>Durasi</Text>
               </View>
               <View style={styles.locationStatDivider} />
               <View style={styles.locationStat}>
                 <IconSymbol size={18} name="figure.walk" color="#1d1d1f" />
-                <Text style={styles.locationStatValue}>0.8</Text>
+                <Text style={styles.locationStatValue}>{locationStats?.totalDistance || 0}</Text>
                 <Text style={styles.locationStatLabel}>KM</Text>
               </View>
             </View>

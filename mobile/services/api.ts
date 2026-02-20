@@ -333,10 +333,14 @@ export const locationsAPI = {
   },
 
   // Get route for a task
-  getTaskRoute: async (takenTaskId: string): Promise<GetRouteResponse> => {
+  getTaskRoute: async (takenTaskId: string, userId?: string): Promise<GetRouteResponse> => {
     try {
+      const params: any = {};
+      if (userId) params.user_id = userId;
+
       const response = await api.get<GetRouteResponse>(
-        `/locations/tasks/${takenTaskId}/route`
+        `/locations/tasks/${takenTaskId}/route`,
+        { params }
       );
       return response.data;
     } catch (error: any) {
