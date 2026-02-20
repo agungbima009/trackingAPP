@@ -3,7 +3,7 @@ import { locationsAPI } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Constants
-const TRACKING_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
+const TRACKING_INTERVAL = 1 * 60 * 1000; // 1 minute in milliseconds (for testing)
 const LOCATION_ACCURACY = Location.Accuracy.High;
 const STORAGE_KEY = 'active_location_tracking';
 
@@ -117,16 +117,21 @@ const recordLocationToAPI = async (takenTaskId: string): Promise<boolean> => {
             address
         );
 
-        console.log('Location recorded successfully:', {
-            latitude,
-            longitude,
+        console.log('✓ Location recorded:', {
+            latitude: latitude.toFixed(6),
+            longitude: longitude.toFixed(6),
             address,
             timestamp: new Date().toISOString(),
         });
 
         return true;
-    } catch (error) {
-        console.error('Error recording location to API:', error);
+    } catch (error: any) {
+        // Check if it's a "not in progress" error (expected during startup)
+        if (error.message?.includes('in progress')) {
+            console.log('⏳ Task not ready for location recording yet, will retry later');
+        } else {
+            console.error('Error recording location to API:', error.message);
+        }
         return false;
     }
 };
@@ -148,16 +153,30 @@ export const startLocationTracking = async (takenTaskId: string): Promise<boolea
             throw new Error('Location permissions not granted');
         }
 
-        // Record initial location
-        const initialSuccess = await recordLocationToAPI(takenTaskId);
-        if (!initialSuccess) {
-            console.warn('Failed to record initial location, but continuing tracking');
+        // Try to record initial location, but don't fail if it doesn't work
+        // (task might not be fully in progress yet on backend)
+        console.log('📍 Attempting to record initial location...');
+        try {
+            const initialSuccess = await recordLocationToAPI(takenTaskId);
+            if (initialSuccess) {
+                console.log('✓ Initial location recorded successfully');
+            } else {
+                console.log('⏭️  Skipping initial location, will record at next interval');
+            }
+        } catch (error) {
+            console.log('⏭️  Initial location skipped (task initializing), will record at next interval');
+            // Continue anyway - the periodic tracking will try again
         }
 
         // Set up periodic tracking (every hour)
         const intervalId = setInterval(async () => {
-            console.log('Recording hourly location update...');
-            await recordLocationToAPI(takenTaskId);
+            console.log('⏰ Hourly location update triggered');
+            const success = await recordLocationToAPI(takenTaskId);
+            if (success) {
+                console.log('✓ Hourly location update completed');
+            } else {
+                console.log('⚠️  Hourly location update failed, will retry next hour');
+            }
         }, TRACKING_INTERVAL);
 
         // Create tracking session
@@ -177,8 +196,8 @@ export const startLocationTracking = async (takenTaskId: string): Promise<boolea
             })
         );
 
-        console.log('Location tracking started successfully');
-        console.log(`Will record location every hour (${TRACKING_INTERVAL / 1000 / 60} minutes)`);
+        console.log('✓ Location tracking started successfully');
+        console.log(`📍 Location will be recorded every ${TRACKING_INTERVAL / 1000 / 60} minutes`);
 
         return true;
     } catch (error) {

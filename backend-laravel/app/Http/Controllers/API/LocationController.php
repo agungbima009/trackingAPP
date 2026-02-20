@@ -37,8 +37,8 @@ class LocationController extends Controller
             ], 403);
         }
 
-        // Verify task is active (in_progress)
-        if ($takenTask->status !== 'in_progress') {
+        // Verify task is active (in progress)
+        if ($takenTask->status !== 'in progress') {
             return response()->json([
                 'message' => 'Location tracking is only available for tasks in progress'
             ], 422);
@@ -90,7 +90,7 @@ class LocationController extends Controller
                     continue;
                 }
 
-                if ($takenTask->status !== 'in_progress') {
+                if ($takenTask->status !== 'in progress') {
                     $errors[] = "Location $index: Task not in progress";
                     continue;
                 }

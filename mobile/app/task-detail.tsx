@@ -186,12 +186,12 @@ export default function TaskDetailScreen() {
       if (response.locations && response.locations.data && response.locations.data.length > 0) {
         const lastLocation = response.locations.data[0]; // Most recent
         const lastRecordedTime = new Date(lastLocation.recorded_at);
-        const nextTime = new Date(lastRecordedTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+        const nextTime = new Date(lastRecordedTime.getTime() + 1 * 60 * 1000); // Add 1 minute (for testing)
         setNextTrackingTime(nextTime);
       } else {
-        // No locations yet, next tracking is 1 hour from now
+        // No locations yet, next tracking is 1 minute from now
         const nextTime = new Date();
-        nextTime.setHours(nextTime.getHours() + 1);
+        nextTime.setMinutes(nextTime.getMinutes() + 1);
         setNextTrackingTime(nextTime);
       }
     } catch (error) {
@@ -237,30 +237,60 @@ export default function TaskDetailScreen() {
     setShowSuccess(false);
     setIsTracking(true);
 
-    // Reload task data to get updated status
-    const response = await tasksAPI.getMyTasks();
-    const updatedTask = response.data.find(
-      (t: any) => t.taken_task_id === params.taskId
-    );
+    try {
+      // Add a delay to allow backend to process the status change
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-    if (updatedTask) {
-      setTask(updatedTask);
+      // Reload task data to get updated status (retry up to 3 times)
+      let verifiedTask = null;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-      // Start GPS tracking service - records location every hour
-      const trackingStarted = await LocationTrackingService.startTracking(updatedTask.taken_task_id);
+      while (retryCount < maxRetries && !verifiedTask) {
+        const response = await tasksAPI.getMyTasks();
+        const foundTask = response.data.find(
+          (t: any) => t.taken_task_id === params.taskId
+        );
+
+        if (foundTask) {
+          const taskStatus = foundTask.computed_status || foundTask.status;
+          
+          if (taskStatus === 'in progress') {
+            verifiedTask = foundTask;
+            break;
+          } else {
+            console.warn(`Task status is "${taskStatus}", retrying... (${retryCount + 1}/${maxRetries})`);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+        }
+      }
+
+      if (!verifiedTask) {
+        throw new Error('Task did not update to in progress status after multiple retries');
+      }
+
+      setTask(verifiedTask);
+
+      // Now start GPS tracking with verified in-progress task
+      const trackingStarted = await LocationTrackingService.startTracking(verifiedTask.taken_task_id);
 
       if (trackingStarted) {
-        // Calculate next tracking time (1 hour from now since this is the first location)
+        // Calculate next tracking time (1 minute from now - for testing)
         const nextTime = new Date();
-        nextTime.setHours(nextTime.getHours() + 1);
+        nextTime.setMinutes(nextTime.getMinutes() + 1);
         setNextTrackingTime(nextTime);
 
-        // Load initial location data
-        await loadLocationData(updatedTask.taken_task_id);
+        // Load initial location data (with small delay to let first location record)
+        setTimeout(() => {
+          loadLocationData(verifiedTask.taken_task_id);
+        }, 2000);
 
         Alert.alert(
           'Pelacakan Dimulai',
-          'Lokasi Anda akan dicatat setiap jam selama tugas berlangsung.',
+          'Lokasi Anda akan dicatat setiap menit selama tugas berlangsung (mode testing).',
           [{ text: 'Mengerti' }]
         );
       } else {
@@ -270,6 +300,14 @@ export default function TaskDetailScreen() {
           [{ text: 'OK' }]
         );
       }
+    } catch (error: any) {
+      console.error('Error in handleSuccessFinish:', error);
+      Alert.alert(
+        'Kesalahan',
+        error.message || 'Terjadi kesalahan saat memulai pelacakan',
+        [{ text: 'OK' }]
+      );
+      setIsTracking(false);
     }
   };
 
