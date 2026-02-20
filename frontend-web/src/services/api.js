@@ -612,7 +612,7 @@ export const getMyReports = async () => {
  * @param {string|number} takenTaskId - Taken Task ID
  * @returns {Promise} Locations for the taken task
  */
-export const getLocationsByTakenTask = async (takenTaskId) => {
+export const getLocationsByTakenTask = async (takenTaskId) => { 
   const response = await api.get(`/admin/locations/tasks/${takenTaskId}/current`);
   return response.data;
 };
