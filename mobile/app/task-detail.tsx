@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SwipeableButton } from '@/components/swipeable-button';
 import SuccessCheckOverlay from '@/components/SuccessCheckOverlay';
 import { tasksAPI } from '@/services/api';
+import LocationTrackingService from '@/services/locationTracking';
 
 
 interface LocationPoint {
@@ -25,6 +26,7 @@ export default function TaskDetailScreen() {
   const [task, setTask] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nextTrackingTime, setNextTrackingTime] = useState<Date | null>(null);
 
   // Fetch task data on mount
   useEffect(() => {
@@ -37,6 +39,32 @@ export default function TaskDetailScreen() {
       loadTaskDetail();
     }, [])
   );
+
+  // Cleanup effect - stop tracking when component unmounts or task is completed
+  useEffect(() => {
+    return () => {
+      // Don't stop tracking when component unmounts - let it continue
+      // Only stop when user explicitly completes the task
+    };
+  }, []);
+
+  // Format next tracking time
+  const getNextTrackingTimeText = () => {
+    if (!nextTrackingTime) return '';
+
+    const now = new Date();
+    const diff = nextTrackingTime.getTime() - now.getTime();
+    const minutes = Math.floor(diff / 60000);
+
+    if (minutes <= 0) return 'Segera';
+    if (minutes < 60) return `${minutes} menit lagi`;
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (remainingMinutes === 0) return `${hours} jam lagi`;
+    return `${hours} jam ${remainingMinutes} menit lagi`;
+  };
 
   const loadTaskDetail = async () => {
     try {
@@ -56,6 +84,16 @@ export default function TaskDetailScreen() {
           setIsTracking(true);
           // Load sample location data for in-progress tasks
           loadLocationHistory();
+
+          // Resume location tracking if not already active
+          if (!LocationTrackingService.isActive()) {
+            await LocationTrackingService.startTracking(foundTask.taken_task_id);
+          }
+
+          // Set next tracking time
+          const nextTime = new Date();
+          nextTime.setHours(nextTime.getHours() + 1);
+          setNextTrackingTime(nextTime);
         }
       } else {
         setError('Task not found');
@@ -151,7 +189,29 @@ export default function TaskDetailScreen() {
     // Reload task data to get updated status
     await loadTaskDetail();
 
-    // In real app: Start GPS tracking service
+    // Start GPS tracking service - records location every hour
+    if (task) {
+      const trackingStarted = await LocationTrackingService.startTracking(task.taken_task_id);
+
+      if (trackingStarted) {
+        // Calculate next tracking time (1 hour from now)
+        const nextTime = new Date();
+        nextTime.setHours(nextTime.getHours() + 1);
+        setNextTrackingTime(nextTime);
+
+        Alert.alert(
+          'Pelacakan Dimulai',
+          'Lokasi Anda akan dicatat setiap jam selama tugas berlangsung.',
+          [{ text: 'Mengerti' }]
+        );
+      } else {
+        Alert.alert(
+          'Peringatan',
+          'Gagal memulai pelacakan lokasi. Izin lokasi mungkin tidak diberikan.',
+          [{ text: 'OK' }]
+        );
+      }
+    }
   };
 
   const handleCreateNewReport = () => {
@@ -360,6 +420,15 @@ export default function TaskDetailScreen() {
                     Gedung Utama, Lantai 3 - Ruang Server
                   </Text>
                 </View>
+
+                {nextTrackingTime && (
+                  <View style={styles.nextTrackingInfo}>
+                    <IconSymbol name="clock.arrow.circlepath" size={14} color="#3B82F6" />
+                    <Text style={styles.nextTrackingText}>
+                      Pembaruan lokasi berikutnya: {getNextTrackingTimeText()}
+                    </Text>
+                  </View>
+                )}
               </>
             ) : currentStatus === 'pending' ? (
               <View style={styles.trackingInactive}>
@@ -744,6 +813,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: '#1d1d1f',
+  },
+  nextTrackingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    marginTop: 8,
+  },
+  nextTrackingText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#1E40AF',
+    fontWeight: '500',
   },
   trackingInactive: {
     alignItems: 'center',
