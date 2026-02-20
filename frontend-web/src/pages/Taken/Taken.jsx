@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAssignments, createAssignment, updateAssignment, deleteAssignment, getTasks, getUsers } from '../../services/api';
 import './Taken.css';
 
 function Taken() {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [takens, setTakens] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -359,13 +361,14 @@ function Taken() {
                   <th>Start Time</th>
                   <th>Status</th>
                   <th>Created At</th>
+                  <th className="monitor-header">Monitor</th>
                   <th className="actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {takens.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="empty-state">
+                    <td colSpan="9" className="empty-state">
                       <div className="empty-content">
                         <span className="empty-icon">📋</span>
                         <p>No assignments yet</p>
@@ -381,9 +384,9 @@ function Taken() {
                         {taken.task?.title || 'N/A'}
                       </td>
                       <td className="team-cell">
-                        {taken.assigned_users && taken.assigned_users.length > 0 ? (
+                        {taken.users && taken.users.length > 0 ? (
                           <div className="user-badges">
-                            {taken.assigned_users.map((user, idx) => (
+                            {taken.users.map((user, idx) => (
                               <span key={idx} className="team-badge" title={user.email}>
                                 {user.name}
                               </span>
@@ -406,6 +409,19 @@ function Taken() {
                       </td>
                       <td className="date-cell">
                         {taken.created_at ? new Date(taken.created_at).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="monitor-cell">
+                        <button
+                          className="action-btn monitor-btn"
+                          onClick={() => navigate(`/monitoring/${taken.taken_task_id}`)}
+                          title="View Monitoring"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 7C12 9.20914 10.2091 11 8 11C5.79086 11 4 9.20914 4 7C4 4.79086 5.79086 3 8 3C10.2091 3 12 4.79086 12 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8 9C8.55228 9 9 8.55228 9 8C9 7.44772 8.55228 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55228 7.44772 9 8 9Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M2 7C2.66667 4.33333 4.66667 2 8 2C11.3333 2 13.3333 4.33333 14 7C13.3333 9.66667 11.3333 12 8 12C4.66667 12 2.66667 9.66667 2 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
                       </td>
                       <td className="actions-cell">
                         <button

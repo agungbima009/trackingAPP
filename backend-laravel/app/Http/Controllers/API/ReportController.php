@@ -24,6 +24,11 @@ class ReportController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
+        // Filter by taken_task_id (assignment)
+        if ($request->has('taken_task_id')) {
+            $query->where('taken_task_id', $request->taken_task_id);
+        }
+
         // Filter by task
         if ($request->has('task_id')) {
             $query->whereHas('takenTask', function ($q) use ($request) {

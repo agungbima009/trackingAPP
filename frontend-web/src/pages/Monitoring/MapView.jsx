@@ -99,17 +99,33 @@ function MapView({ members }) {
                   <div className="marker-popup">
                     <h3>{member.name}</h3>
                     <div className="popup-info">
-                      <p><strong>Team:</strong> {member.team.charAt(0).toUpperCase() + member.team.slice(1)}</p>
+                      <p><strong>Email:</strong> {member.email}</p>
                       <p>
                         <strong>Status:</strong> 
                         <span className={`status-badge ${member.status}`}>
                           {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                         </span>
                       </p>
+                      {member.lastUpdate && (
+                        <p className="last-update">
+                          <strong>Last Update:</strong><br/>
+                          {new Date(member.lastUpdate).toLocaleString('id-ID', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      )}
                       <p className="coordinates">
                         <strong>Location:</strong><br/>
                         {parseFloat(member.lat).toFixed(4)}, {parseFloat(member.lng).toFixed(4)}
                       </p>
+                      {member.accuracy && (
+                        <p className="accuracy">
+                          <strong>Accuracy:</strong> ±{member.accuracy}m
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Popup>

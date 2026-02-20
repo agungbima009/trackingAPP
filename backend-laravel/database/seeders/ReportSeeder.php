@@ -99,15 +99,25 @@ class ReportSeeder extends Seeder
                 // Add timestamp
                 $reportContent .= "\n\nReport submitted by user at: " . now()->format('Y-m-d H:i:s');
 
-                // Randomly decide if this report has an image (30% chance)
-                $hasImage = rand(1, 10) <= 3;
-                $imagePath = $hasImage ? 'reports/' . uniqid() . '_report_image.jpg' : null;
+                // Randomly decide if this report has images (30% chance)
+                $hasImages = rand(1, 10) <= 3;
+                $imagePaths = null;
+                
+                if ($hasImages) {
+                    // Generate 1-3 random image paths
+                    $imageCount = rand(1, 3);
+                    $paths = [];
+                    for ($i = 0; $i < $imageCount; $i++) {
+                        $paths[] = 'reports/' . uniqid() . '_image_' . $i . '.jpg';
+                    }
+                    $imagePaths = json_encode($paths);
+                }
 
                 ReportModel::create([
                     'user_id' => $userId,
                     'taken_task_id' => $takenTask->taken_task_id,
                     'report' => $reportContent,
-                    'image' => $imagePath,
+                    'image' => $imagePaths,
                     'created_at' => $takenTask->end_time ?? now(),
                     'updated_at' => $takenTask->end_time ?? now(),
                 ]);
@@ -119,7 +129,7 @@ class ReportSeeder extends Seeder
         $this->command->info('Report data seeded successfully!');
         $this->command->info('Created ' . $createdReports . ' reports');
         $this->command->info('  - Reports linked to ' . $completedTasks->count() . ' completed tasks');
-        $this->command->info('  - ' . round(($createdReports * 0.3)) . ' reports include image references');
+        $this->command->info('  - ~' . round(($createdReports * 0.3)) . ' reports include image references (JSON arrays)');
         $this->command->info('  - Realistic report content with timestamps');
     }
 }

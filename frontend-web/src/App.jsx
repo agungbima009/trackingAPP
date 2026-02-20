@@ -23,13 +23,6 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Monitoring - Admin and Superadmin only */}
-        <Route path="/monitoring" element={
-          <ProtectedRoute permission="MONITORING">
-            <Monitoring />
-          </ProtectedRoute>
-        } />
-        
         {/* Task Management - Admin and Superadmin only */}
         <Route path="/task" element={
           <ProtectedRoute permission="TASK">
@@ -41,6 +34,13 @@ function App() {
         <Route path="/taken" element={
           <ProtectedRoute permission="TAKEN">
             <Taken />
+          </ProtectedRoute>
+        } />
+        
+        {/* Monitoring - Accessed from Taken page (no sidebar menu) */}
+        <Route path="/monitoring/:takenTaskId" element={
+          <ProtectedRoute permission="TAKEN">
+            <Monitoring />
           </ProtectedRoute>
         } />
         

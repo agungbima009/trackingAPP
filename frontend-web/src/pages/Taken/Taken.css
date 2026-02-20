@@ -317,6 +317,16 @@
   color: white;
 }
 
+.action-btn.monitor-btn {
+  color: #3b82f6;
+}
+
+.action-btn.monitor-btn:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;

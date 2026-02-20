@@ -31,20 +31,28 @@ class TakenTaskSeeder extends Seeder
 
         $takenTasks = [];
 
-        // Assign tasks to employees based on task status
+        // Create distribution of statuses: 40% completed, 33% in_progress, 27% pending
+        $statusDistribution = ['completed', 'completed', 'completed', 'completed', // 4 completed
+                               'in_progress', 'in_progress', 'in_progress', 'in_progress', 'in_progress', // 5 in_progress
+                               'pending', 'pending', 'pending', 'pending', 'pending', 'pending']; // 6 pending
+
+        // Assign tasks to employees
         foreach ($tasks as $index => $task) {
             $employeeIndex = $index % $employees->count();
             $employee = $employees[$employeeIndex];
 
-            // Determine dates and times based on task status
-            if ($task->status === 'completed') {
+            // Get status from distribution (cycle through if more tasks than distribution items)
+            $assignedStatus = $statusDistribution[$index % count($statusDistribution)];
+
+            // Determine dates and times based on assigned status
+            if ($assignedStatus === 'completed') {
                 // Completed tasks: 3-7 days ago, with end time
                 $daysAgo = rand(3, 7);
                 $startTime = Carbon::now()->subDays($daysAgo)->setHour(8)->setMinute(rand(0, 59));
                 $endTime = $startTime->copy()->addHours(rand(4, 8))->addMinutes(rand(0, 59));
                 $status = 'completed';
                 $date = $startTime->toDateString();
-            } elseif ($task->status === 'in_progress') {
+            } elseif ($assignedStatus === 'in_progress') {
                 // In progress tasks: started today or yesterday
                 $daysAgo = rand(0, 1);
                 $startTime = Carbon::now()->subDays($daysAgo)->setHour(rand(8, 12))->setMinute(rand(0, 59));

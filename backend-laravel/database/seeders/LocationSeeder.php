@@ -18,7 +18,10 @@ class LocationSeeder extends Seeder
         $takenTasks = TakenTaskModel::whereIn('status', ['in_progress', 'completed'])->get();
 
         if ($takenTasks->isEmpty()) {
-            $this->command->error('No active taken tasks found. Please run TakenTaskSeeder first.');
+            $this->command->warn('⚠️  No active taken tasks found for location tracking.');
+            $this->command->info('   Skipping location seeding. This is normal if:');
+            $this->command->info('   - TakenTaskSeeder created only pending tasks');
+            $this->command->info('   - Or no taken tasks were created yet');
             return;
         }
 

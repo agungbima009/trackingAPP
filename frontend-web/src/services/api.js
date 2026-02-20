@@ -558,4 +558,63 @@ export const isAuthenticated = () => {
   return !!getToken();
 };
 
+// ============================================
+// REPORT SERVICES
+// ============================================
+
+/**
+ * Get all reports (Admin only)
+ * @param {Object} filters - Query parameters (user_id, taken_task_id, date, etc.)
+ * @returns {Promise} Reports list
+ */
+export const getReports = async (filters = {}) => {
+  const response = await api.get('/admin/reports', { params: filters });
+  return response.data;
+};
+
+/**
+ * Get reports for a specific task
+ * @param {string|number} taskId - Task ID
+ * @returns {Promise} Reports for the task
+ */
+export const getReportsByTask = async (taskId) => {
+  const response = await api.get(`/admin/reports/tasks/${taskId}`);
+  return response.data;
+};
+
+/**
+ * Get reports for a specific taken task (assignment)
+ * @param {string|number} takenTaskId - Taken Task ID
+ * @returns {Promise} Reports for the taken task
+ */
+export const getReportsByTakenTask = async (takenTaskId) => {
+  const response = await api.get('/admin/reports', { 
+    params: { taken_task_id: takenTaskId } 
+  });
+  return response.data;
+};
+
+/**
+ * Get my reports (Employee)
+ * @returns {Promise} User's own reports
+ */
+export const getMyReports = async () => {
+  const response = await api.get('/reports/my');
+  return response.data;
+};
+
+// ============================================
+// LOCATION SERVICES
+// ============================================
+
+/**
+ * Get locations for a specific taken task (assignment)
+ * @param {string|number} takenTaskId - Taken Task ID
+ * @returns {Promise} Locations for the taken task
+ */
+export const getLocationsByTakenTask = async (takenTaskId) => {
+  const response = await api.get(`/admin/locations/tasks/${takenTaskId}/current`);
+  return response.data;
+};
+
 export default api;

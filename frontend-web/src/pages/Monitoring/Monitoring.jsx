@@ -1,99 +1,171 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import './Monitoring.css';
 import MapView from './MapView';
-import FilterPanel from './FilterPanel';
+import ReportsPanel from './ReportsPanel';
+import { getAssignmentDetails, getReportsByTakenTask, getLocationsByTakenTask } from '../../services/api';
 
 function Monitoring() {
-  const [filters, setFilters] = useState({
-    team: 'all',
-    status: 'all',
-    dateRange: 'today'
-  });
+  const { takenTaskId } = useParams();
+  const navigate = useNavigate();
+  
+  const [assignment, setAssignment] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reportsLoading, setReportsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Sample member data with team associations and GPS coordinates (Jakarta area)
-  const allMembers = [
-    // Team Alpha members - North Jakarta area
-    { id: 1, name: 'John Doe', team: 'alpha', status: 'active', lat: -6.1380, lng: 106.8650 },
-    { id: 2, name: 'Jane Smith', team: 'alpha', status: 'active', lat: -6.1520, lng: 106.8750 },
-    { id: 3, name: 'Mike Johnson', team: 'alpha', status: 'inactive', lat: -6.1450, lng: 106.8550 },
-    { id: 4, name: 'Sarah Williams', team: 'alpha', status: 'active', lat: -6.1600, lng: 106.8800 },
-    
-    // Team Beta members - Central Jakarta area
-    { id: 5, name: 'David Brown', team: 'beta', status: 'active', lat: -6.2088, lng: 106.8456 },
-    { id: 6, name: 'Emily Davis', team: 'beta', status: 'active', lat: -6.2150, lng: 106.8350 },
-    { id: 7, name: 'Chris Wilson', team: 'beta', status: 'offline', lat: -6.2000, lng: 106.8500 },
-    
-    // Team Gamma members - South Jakarta area
-    { id: 8, name: 'Lisa Anderson', team: 'gamma', status: 'active', lat: -6.2615, lng: 106.7810 },
-    { id: 9, name: 'Tom Martinez', team: 'gamma', status: 'active', lat: -6.2700, lng: 106.7950 },
-    { id: 10, name: 'Anna Taylor', team: 'gamma', status: 'inactive', lat: -6.2550, lng: 106.7700 },
-    { id: 11, name: 'Robert Thomas', team: 'gamma', status: 'active', lat: -6.2800, lng: 106.8000 },
-    { id: 12, name: 'Jessica Moore', team: 'gamma', status: 'offline', lat: -6.2650, lng: 106.7850 },
-    
-    // Team Delta members - East Jakarta area
-    { id: 13, name: 'Daniel Jackson', team: 'delta', status: 'active', lat: -6.2250, lng: 106.9280 },
-    { id: 14, name: 'Olivia White', team: 'delta', status: 'active', lat: -6.2350, lng: 106.9150 },
-    { id: 15, name: 'James Harris', team: 'delta', status: 'active', lat: -6.2150, lng: 106.9350 },
-    
-    // Team Epsilon members - West Jakarta area
-    { id: 16, name: 'Sophia Martin', team: 'epsilon', status: 'active', lat: -6.1850, lng: 106.7600 },
-    { id: 17, name: 'William Thompson', team: 'epsilon', status: 'inactive', lat: -6.1750, lng: 106.7450 },
-    { id: 18, name: 'Emma Garcia', team: 'epsilon', status: 'active', lat: -6.1950, lng: 106.7700 },
-    { id: 19, name: 'Alexander Lee', team: 'epsilon', status: 'active', lat: -6.2050, lng: 106.7550 },
-    { id: 20, name: 'Mia Rodriguez', team: 'epsilon', status: 'offline', lat: -6.1650, lng: 106.7350 },
-  ];
+  // Fetch assignment details and reports
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setReportsLoading(true);
+        setError('');
 
-  // Filter members based on selected team and status
-  const filteredMembers = useMemo(() => {
-    return allMembers.filter(member => {
-      const teamMatch = filters.team === 'all' || member.team === filters.team;
-      const statusMatch = filters.status === 'all' || member.status === filters.status;
-      return teamMatch && statusMatch;
-    });
-  }, [filters]);
+        // Fetch assignment details
+        const assignmentData = await getAssignmentDetails(takenTaskId);
+        setAssignment(assignmentData.assignment); // API returns { assignment: {...} }
 
-  // Calculate stats based on filtered data
-  const stats = useMemo(() => {
-    const total = filteredMembers.length;
-    const active = filteredMembers.filter(m => m.status === 'active').length;
-    const offline = filteredMembers.filter(m => m.status === 'offline').length;
-    return { total, active, offline };
-  }, [filteredMembers]);
+        // Fetch reports for this taken task
+        const reportsData = await getReportsByTakenTask(takenTaskId);
+        setReports(reportsData.data || []);
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+        // Fetch locations for this taken task
+        try {
+          const locationsData = await getLocationsByTakenTask(takenTaskId);
+          setLocations(locationsData.current_locations || []);
+        } catch (locErr) {
+          console.warn('No location data available:', locErr);
+          setLocations([]);
+        }
+
+      } catch (err) {
+        console.error('Error fetching monitoring data:', err);
+        setError(err.response?.data?.message || 'Failed to load monitoring data');
+      } finally {
+        setLoading(false);
+        setReportsLoading(false);
+      }
+    };
+
+    if (takenTaskId) {
+      fetchData();
+    }
+  }, [takenTaskId]);
+
+  // Calculate member locations from location tracking data
+  const memberLocations = assignment?.users?.map((user) => {
+    // Find location data for this user from location tracking
+    const userLocation = locations.find(loc => loc.user_id === user.id);
+    
+    // Check if user has submitted a report
+    const hasReport = reports.some(r => r.user_id === user.id);
+    
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      status: hasReport ? 'active' : 'offline',
+      // Use actual tracked location from database
+      lat: userLocation?.latitude || -6.2088,
+      lng: userLocation?.longitude || 106.8456,
+      hasReport: hasReport,
+      lastUpdate: userLocation?.recorded_at || null,
+      accuracy: userLocation?.accuracy || null
+    };
+  }) || [];
+
+  // Calculate stats
+  const stats = {
+    total: memberLocations.length,
+    active: memberLocations.filter(m => m.status === 'active').length,
+    offline: memberLocations.filter(m => m.status === 'offline').length
   };
+
+  if (loading) {
+    return (
+      <div className="monitoring-container">
+        <div className="monitoring-loading">
+          <div className="spinner"></div>
+          <p>Loading monitoring data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="monitoring-container">
+        <div className="monitoring-error">
+          <span className="error-icon">⚠️</span>
+          <p>{error}</p>
+          <button onClick={() => navigate('/taken')} className="back-btn">
+            Back to Assignments
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!assignment) {
+    return (
+      <div className="monitoring-container">
+        <div className="monitoring-loading">
+          <div className="spinner"></div>
+          <p>Loading assignment data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="monitoring-container">
-      <div className="monitoring-header">
-        <h1>Team Location Monitoring</h1>
-        <div className="header-stats">
-          <div className="stat-item">
-            <span className="stat-label">Total Members</span>
+      <div className="monitoring-header-compact">
+        <div className="header-top">
+          <button onClick={() => navigate('/taken')} className="back-button">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className="header-info">
+            <h1>{assignment?.task?.title || 'Task Monitoring'}</h1>
+            <span className="assignment-date">
+              {assignment?.date ? new Date(assignment.date).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+              }) : ''}
+            </span>
+          </div>
+        </div>
+        
+        <div className="header-stats-compact">
+          <div className="stat-item-compact">
             <span className="stat-value">{stats.total}</span>
+            <span className="stat-label">Team Members</span>
           </div>
-          <div className="stat-item">
-            <span className="stat-label">Active Now</span>
+          <div className="stat-divider"></div>
+          <div className="stat-item-compact active">
             <span className="stat-value">{stats.active}</span>
+            <span className="stat-label">Reported</span>
           </div>
-          <div className="stat-item">
-            <span className="stat-label">Offline</span>
+          <div className="stat-divider"></div>
+          <div className="stat-item-compact offline">
             <span className="stat-value">{stats.offline}</span>
+            <span className="stat-label">Pending</span>
           </div>
         </div>
       </div>
 
       <div className="monitoring-content">
-        <FilterPanel 
-          filters={filters} 
-          onFilterChange={handleFilterChange}
-          stats={stats}
-        />
-        <MapView members={filteredMembers} />
+        <MapView members={memberLocations} />
+        <ReportsPanel reports={reports} loading={reportsLoading} />
       </div>
     </div>
   );
 }
 
 export default Monitoring;
+

@@ -21,6 +21,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Equipment Installation - North Branch',
@@ -29,6 +30,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Site Inspection - Warehouse A',
@@ -37,6 +39,7 @@ class TaskSeeder extends Seeder
                 'status' => 'in_progress',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Delivery - Customer Site Alpha',
@@ -45,6 +48,7 @@ class TaskSeeder extends Seeder
                 'status' => 'in_progress',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Maintenance Check - East Facility',
@@ -53,6 +57,7 @@ class TaskSeeder extends Seeder
                 'status' => 'completed',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Training Session - Regional Office',
@@ -61,6 +66,7 @@ class TaskSeeder extends Seeder
                 'status' => 'completed',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Data Collection - Multiple Sites',
@@ -69,6 +75,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Network Setup - West Branch',
@@ -77,6 +84,7 @@ class TaskSeeder extends Seeder
                 'status' => 'in_progress',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Quality Audit - Production Line B',
@@ -85,6 +93,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Emergency Response - Site Beta',
@@ -93,6 +102,7 @@ class TaskSeeder extends Seeder
                 'status' => 'completed',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Inventory Count - Storage Facility',
@@ -101,6 +111,7 @@ class TaskSeeder extends Seeder
                 'status' => 'in_progress',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Customer Support - Field Visit',
@@ -109,6 +120,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Documentation Review - Head Office',
@@ -117,6 +129,7 @@ class TaskSeeder extends Seeder
                 'status' => 'pending',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Equipment Pickup - Vendor Location',
@@ -125,6 +138,7 @@ class TaskSeeder extends Seeder
                 'status' => 'completed',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
             [
                 'title' => 'Safety Training - Construction Site',
@@ -133,6 +147,7 @@ class TaskSeeder extends Seeder
                 'status' => 'in_progress',
                 'start_time' => '08:00:00',
                 'end_time' => '17:00:00',
+                'manual_override' => true,
             ],
         ];
 

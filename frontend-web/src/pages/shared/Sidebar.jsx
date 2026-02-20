@@ -62,12 +62,6 @@ function Sidebar() {
       permission: 'DASHBOARD'
     },
     { 
-      icon: '/icon/System-Report.png', 
-      label: 'Monitoring', 
-      path: '/monitoring',
-      permission: 'MONITORING'
-    },
-    { 
       icon: '/icon/Clipboard.png', 
       label: 'Task', 
       path: '/task',
