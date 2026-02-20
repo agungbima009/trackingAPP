@@ -196,9 +196,12 @@
 }
 
 .taken-table td {
-  padding: 16px 20px;
+  padding: 12px 16px;
   color: #1d1d1f;
   text-align: center;
+  vertical-align: middle !important;
+  height: 65px !important;
+  max-height: 65px !important;
 }
 
 .row-number {
@@ -225,16 +228,26 @@
 
 .team-cell {
   min-width: 120px;
+  padding: 8px 12px !important;
+}
+
+.user-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
 }
 
 .team-badge {
   display: inline-block;
-  padding: 6px 12px;
+  padding: 4px 10px;
   background: #000000;
   color: white;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .deadline-cell {
@@ -276,20 +289,40 @@
   font-family: 'Courier New', monospace;
 }
 
-.actions-header {
+.taken-table .monitor-header {
   text-align: center;
-  width: 100px;
-  min-width: 100px;
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  padding: 8px !important;
 }
 
-.actions-cell {
+.taken-table .monitor-cell {
   text-align: center;
   white-space: nowrap;
-  width: 120px;
-  min-width: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  vertical-align: middle !important;
+  padding: 8px !important;
+}
+
+.taken-table .actions-header {
+  text-align: center;
+  width: 85px !important;
+  min-width: 85px !important;
+  max-width: 85px !important;
+  padding: 8px !important;
+}
+
+.taken-table .actions-cell {
+  text-align: center;
+  white-space: nowrap;
+  width: 85px !important;
+  min-width: 85px !important;
+  max-width: 85px !important;
+  vertical-align: middle !important;
+  padding: 8px !important;
 }
 
 .action-btn {
@@ -305,6 +338,7 @@
   margin: 0 2px;
   width: 40px;
   height: 40px;
+  vertical-align: middle;
 }
 
 .action-btn.delete-btn {
