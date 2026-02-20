@@ -199,6 +199,14 @@
   text-overflow: ellipsis;
 }
 
+.user-role {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .user-menu {
   background: none;
   border: none;
@@ -240,6 +248,22 @@
   align-items: center;
   gap: 10px;
   transition: background 0.2s;
+}
+
+.menu-item.session-info {
+  cursor: default;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.menu-item.session-info:hover {
+  background: none;
+  color: #6b7280;
+}
+
+.session-icon {
+  font-size: 14px;
 }
 
 .menu-item:hover {

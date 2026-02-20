@@ -461,6 +461,14 @@
   min-height: 80px;
 }
 
+.role-hint {
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 4px;
+  display: block;
+  font-style: italic;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

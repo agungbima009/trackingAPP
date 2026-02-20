@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../services/api';
+import { initSession, canAccessWeb, clearAuth } from '../../utils/auth';
 import './Login.css';
 
 function Login() {
@@ -53,11 +54,23 @@ function Login() {
         return;
       }
       
+      // Check if user role is allowed to access web application
+      // Employee role is restricted to mobile app only
+      if (!canAccessWeb()) {
+        clearAuth(); // Clear the authentication data
+        setError('Employee accounts can only access the mobile application. Please use the mobile app to login.');
+        setIsLoading(false);
+        return;
+      }
+      
       // Store authentication status
       localStorage.setItem('isAuthenticated', 'true');
       if (formData.rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       }
+      
+      // Initialize session with expiry time
+      initSession();
       
       // Small delay to ensure localStorage is updated
       setTimeout(() => {
